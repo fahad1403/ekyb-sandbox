@@ -211,135 +211,137 @@ class Banks:
 
             return final_dict
         except Exception as e:
-            return {'error': str(e)}
+            print(f"An error occurred: {str(e)}")
+            return None
     
     def riyadh_1(self,pdf_file_path):
-        # try:
+        try:
             # Read the PDF file using pdfplumber
-        with pdfplumber.open(io.BytesIO(pdf_file_path)) as pdf:
-            plain_text_data = []
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                page_text_blocks = page_text.split('\n')
-                plain_text_data.append(page_text_blocks)
+            with pdfplumber.open(io.BytesIO(pdf_file_path)) as pdf:
+                plain_text_data = []
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    page_text_blocks = page_text.split('\n')
+                    plain_text_data.append(page_text_blocks)
 
-        # Account information
-        if plain_text_data[-1][0] == 'CUSTOMER STATEMENT':
-            # Initialize variables
-            opening_balance = 0
-            number_of_deposits = None
-            number_of_withdrawals = None
-            closing_balance = 0
-            revenues = None
-            expenses = None
+            # Account information
+            if plain_text_data[-1][0] == 'CUSTOMER STATEMENT':
+                # Initialize variables
+                opening_balance = 0
+                number_of_deposits = None
+                number_of_withdrawals = None
+                closing_balance = 0
+                revenues = None
+                expenses = None
 
-            # Iterate through elements in the last sublist
-            for item in plain_text_data[-1]:
-                if item.startswith('Beginning Balance'):
-                    # Extract the opening balance
-                    opening_balance = float(item.split()[-1].replace(',', ''))
-                elif item.startswith('Ending Balance'):
-                    # Extract the closing balance
-                    closing_balance = float(item.split()[-1].replace(',', ''))
-                elif 'Deposits' in item:
-                    # Extract the number of deposits and revenues
-                    parts = item.split()
-                    number_of_deposits = int(parts[0].replace(',', ''))
-                    revenues = float(parts[2].replace(',', ''))
-                elif 'Withdrawals' in item:
-                    # Extract the number of withdrawals and expenses
-                    parts = item.split()
-                    number_of_withdrawals = int(parts[0].replace(',', ''))
-                    expenses = float(parts[2].replace(',', ''))
-        print(f"Details of balc: {expenses}, {revenues}, {closing_balance}, {opening_balance}")
-        # Transaction information
-        lst_1 = []
+                # Iterate through elements in the last sublist
+                for item in plain_text_data[-1]:
+                    if item.startswith('Beginning Balance'):
+                        # Extract the opening balance
+                        opening_balance = float(item.split()[-1].replace(',', ''))
+                    elif item.startswith('Ending Balance'):
+                        # Extract the closing balance
+                        closing_balance = float(item.split()[-1].replace(',', ''))
+                    elif 'Deposits' in item:
+                        # Extract the number of deposits and revenues
+                        parts = item.split()
+                        number_of_deposits = int(parts[0].replace(',', ''))
+                        revenues = float(parts[2].replace(',', ''))
+                    elif 'Withdrawals' in item:
+                        # Extract the number of withdrawals and expenses
+                        parts = item.split()
+                        number_of_withdrawals = int(parts[0].replace(',', ''))
+                        expenses = float(parts[2].replace(',', ''))
+            print(f"Details of balc: {expenses}, {revenues}, {closing_balance}, {opening_balance}")
+            # Transaction information
+            lst_1 = []
 
-        # Iterate through all sublists
-        for sublist in plain_text_data:
-            found_beginning_balance = False
-            modified_sublist = []
+            # Iterate through all sublists
+            for sublist in plain_text_data:
+                found_beginning_balance = False
+                modified_sublist = []
 
-            # Iterate through elements in the sublist
-            for item in sublist:
+                # Iterate through elements in the sublist
+                for item in sublist:
+                    if found_beginning_balance:
+                        modified_sublist.append(item)
+                    elif item.startswith('(G/H) Transaction Detail Debit Credit Balance', ):
+                        found_beginning_balance = True
+
+                # Append the modified sublist or the original sublist if no 'Beginning Balance' was found
                 if found_beginning_balance:
-                    modified_sublist.append(item)
-                elif item.startswith('(G/H) Transaction Detail Debit Credit Balance', ):
-                    found_beginning_balance = True
+                    lst_1.append(modified_sublist)
+                else:
+                    lst_1.append(sublist)
 
-            # Append the modified sublist or the original sublist if no 'Beginning Balance' was found
-            if found_beginning_balance:
-                lst_1.append(modified_sublist)
-            else:
-                lst_1.append(sublist)
+            lst_2 = [[item for item in sublist if not item.startswith(('Public shareholding', 'Beginning Balance'))] for sublist in lst_1]
+            lst_3 = [item for sublist in lst_2 for item in sublist]
 
-        lst_2 = [[item for item in sublist if not item.startswith(('Public shareholding', 'Beginning Balance'))] for sublist in lst_1]
-        lst_3 = [item for sublist in lst_2 for item in sublist]
+            # Initialize lists to store extracted data
+            dates = []
+            amounts = []
+            running_balances = []
+            descriptions = []
 
-        # Initialize lists to store extracted data
-        dates = []
-        amounts = []
-        running_balances = []
-        descriptions = []
+            # Regular expression pattern for the specified format
+            pattern = r'(\d{2}/\d{2}) (.+) (\d+\.\d{2}) (\d+\.\d{2})'
 
-        # Regular expression pattern for the specified format
-        pattern = r'(\d{2}/\d{2}) (.+) (\d+\.\d{2}) (\d+\.\d{2})'
+            # Iterate through the list and extract relevant information
+            for item in lst_3:
+                match = re.match(pattern, item)
+                if match:
+                    date, description, amount, running_balance = match.groups()
+                    dates.append(date)
+                    amounts.append(float(amount.replace(',', '')))
+                    running_balances.append(float(running_balance.replace(',', '')))
+                    descriptions.append(description)
 
-        # Iterate through the list and extract relevant information
-        for item in lst_3:
-            match = re.match(pattern, item)
-            if match:
-                date, description, amount, running_balance = match.groups()
-                dates.append(date)
-                amounts.append(float(amount.replace(',', '')))
-                running_balances.append(float(running_balance.replace(',', '')))
-                descriptions.append(description)
+            # Create a DataFrame
+            df = pd.DataFrame({'date': dates, 'description': descriptions, 'amount': amounts, 'running_balance': running_balances})
 
-        # Create a DataFrame
-        df = pd.DataFrame({'date': dates, 'description': descriptions, 'amount': amounts, 'running_balance': running_balances})
+            # Convert running_balance to numeric
+            df['running_balance'] = pd.to_numeric(df['running_balance'], errors='coerce')
 
-        # Convert running_balance to numeric
-        df['running_balance'] = pd.to_numeric(df['running_balance'], errors='coerce')
+            # Calculate the difference in running balance compared to the previous row
+            df['running_balance_diff'] = df['running_balance'].diff()
 
-        # Calculate the difference in running balance compared to the previous row
-        df['running_balance_diff'] = df['running_balance'].diff()
+            df['date'] = pd.to_datetime(df['date'], format='%d/%m')
 
-        df['date'] = pd.to_datetime(df['date'], format='%d/%m')
+            # Set the amount to negative if running_balance_diff is negative
+            df.loc[df['running_balance_diff'] < 0, 'amount'] = -df['amount']
 
-        # Set the amount to negative if running_balance_diff is negative
-        df.loc[df['running_balance_diff'] < 0, 'amount'] = -df['amount']
+            # Drop the running_balance_diff column
+            df = df.drop(columns=['running_balance_diff'])
 
-        # Drop the running_balance_diff column
-        df = df.drop(columns=['running_balance_diff'])
+            if not df.empty and opening_balance is not None and df.iloc[0]['amount'] < opening_balance:
+                df.at[0, 'amount'] = -df.iloc[0]['amount']
 
-        if not df.empty and opening_balance is not None and df.iloc[0]['amount'] < opening_balance:
-            df.at[0, 'amount'] = -df.iloc[0]['amount']
+            rev_month = df[df['amount'] > 0].groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index().round(2)
+            exp_month = df[df['amount'] < 0].groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index().round(2)    
+            result = df.groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index()
 
-        rev_month = df[df['amount'] > 0].groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index().round(2)
-        exp_month = df[df['amount'] < 0].groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index().round(2)    
-        result = df.groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index()
-
-        final_dict = {
-            'free cash flows': dict(zip(result['date'].dt.strftime('%Y-%m'), result['amount'])),
-            'rev_by_month': dict(zip(rev_month['date'].dt.strftime('%Y-%m'), rev_month['amount'])),
-            'exp_by_month': dict(zip(exp_month['date'].dt.strftime('%Y-%m'), exp_month['amount']))
-        }
+            final_dict = {
+                'free cash flows': dict(zip(result['date'].dt.strftime('%Y-%m'), result['amount'])),
+                'rev_by_month': dict(zip(rev_month['date'].dt.strftime('%Y-%m'), rev_month['amount'])),
+                'exp_by_month': dict(zip(exp_month['date'].dt.strftime('%Y-%m'), exp_month['amount']))
+            }
 
 
-        obj = {
-            'opening balance':opening_balance,
-            'closing balance':closing_balance,
-            'number of deposits':number_of_deposits,
-            'number of withdrawals':number_of_withdrawals,
-            'revenues':revenues,
-            'expenses':expenses,    
-        }     
-        final_dict.update(obj)
-        
-        return final_dict
+            obj = {
+                'opening balance':opening_balance,
+                'closing balance':closing_balance,
+                'number of deposits':number_of_deposits,
+                'number of withdrawals':number_of_withdrawals,
+                'revenues':revenues,
+                'expenses':expenses,    
+            }     
+            final_dict.update(obj)
+            
+            return final_dict
 
-        # except Exception as e:
-        #     return {'error': str(e)}
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return None
         
     
     def aljazira_1(self,pdf_file_path):
@@ -501,7 +503,8 @@ class Banks:
             return final_dict
 
         except Exception as e:
-            return {'error': str(e)}
+            print(f"An error occurred: {str(e)}")
+            return None
     
     def anb_1(pdf_file_path):
         try:
