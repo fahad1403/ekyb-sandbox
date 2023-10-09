@@ -585,7 +585,7 @@ def analyze_bank_statement(pdf_file):
     pdf_bytes = pdf_file.read()
     extractor = BankExtractor()
     result = extractor.extract(pdf_bytes=pdf_bytes)
-    
+    print(f"Data from BS: {result}")
     return result
 
 
