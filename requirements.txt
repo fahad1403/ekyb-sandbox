@@ -1,4 +1,6 @@
 gspread
+ultralytics
+opencv-python
 scipy
 PyPDF2
 pdfplumber
