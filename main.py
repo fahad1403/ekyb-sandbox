@@ -640,6 +640,8 @@ def expense_benchmarking_page():
                         rev_values.extend([0] * (max_len - len(rev_values)))
                         exp_values.extend([0] * (max_len - len(exp_values)))
                         cash_flow_values.extend([0] * (max_len - len(cash_flow_values)))
+                        positive_cash_flow_values.extend([0] * (max_len - len(positive_cash_flow_values)))
+                        negative_cash_flow_values.extend([0] * (max_len - len(negative_cash_flow_values)))
 
                         # Create a DataFrame with default values
                         data = pd.DataFrame({
