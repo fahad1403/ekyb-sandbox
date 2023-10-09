@@ -128,6 +128,8 @@ def extract_id_details(uploaded_id):
         matches=[eastern_arabic_to_english(ele) for ele in matches]
 
         issuing_date, dob=distinguish_dates(matches)
+        
+        dob = eastern_arabic_to_english(dob)
 
         issuing_date = hijri_to_gregorian(issuing_date)
 
@@ -162,6 +164,6 @@ def extract_id_details(uploaded_id):
 
         Name_en,Name_ar='',''
 
-    return {"Name": Name_ar, "DOB": dob, "ID Number": id_number}
+    return {"Name": Name_en, "DOB": dob, "ID Number": id_number}
 
 
