@@ -604,7 +604,7 @@ def expense_benchmarking_page():
             with st.spinner("Reading Bank Statement..."):
                 data = analyze_bank_statement(uploaded_file)
                 if not data:
-                    st.error("We are actively working on expanding our support for various bank statement formats")
+                    st.error("We do not support this bank statement format yet.")
                 else:
                     with st.spinner("Analyzing Results..."):
                         
@@ -612,8 +612,6 @@ def expense_benchmarking_page():
                         rev_values = []
                         exp_values = []
                         cash_flow_values = []
-                        positive_cash_flow_values = []
-                        negative_cash_flow_values = []
 
                         if 'rev_by_month' in data:
                             rev_data = data['rev_by_month']
@@ -634,24 +632,19 @@ def expense_benchmarking_page():
                             cash_flow_values = [cash_flow_data[month] for month in months]
                             if data.get('Free Cash Flow'):
                                 data['Free Cash Flow'] = data['Free Cash Flow']
-                                positive_cash_flow_values = [value if value >= 0 else 0 for value in data['Free Cash Flow']]
-                                negative_cash_flow_values = [value if value < 0 else 0 for value in data['Free Cash Flow']]
 
                         max_len = max(len(rev_values), len(exp_values), len(cash_flow_values))
             
                         rev_values.extend([0] * (max_len - len(rev_values)))
                         exp_values.extend([0] * (max_len - len(exp_values)))
                         cash_flow_values.extend([0] * (max_len - len(cash_flow_values)))
-                        positive_cash_flow_values.extend([0] * (max_len - len(positive_cash_flow_values)))
-                        negative_cash_flow_values.extend([0] * (max_len - len(negative_cash_flow_values)))
 
                         # Create a DataFrame with default values
                         data = pd.DataFrame({
                             'Month': months,
                             'Revenue': rev_values,
                             'Expense': exp_values,
-                            'Positive Cash Flow': positive_cash_flow_values,
-                            'Negative Cash Flow': negative_cash_flow_values
+                            'Free Cash Flow': cash_flow_values
                         })
 
                         # Filter out rows with missing data
@@ -664,17 +657,13 @@ def expense_benchmarking_page():
                             st.markdown(html_table, unsafe_allow_html=True)
                             # st.write(data)
 
-                        # hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
+                        hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
 
-                        fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Positive Cash Flow', 'Negative Cash Flow'],
-                        title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
-                        barmode='relative',
-                        color_discrete_map={
-                            'Positive Cash Flow': 'rgba(0,215,0,0.65)',
-                            'Negative Cash Flow': 'rgba(250,0,0,0.5)',
-                            'Expense': 'rgba(102,51,153,0.5)',
-                            'Revenue': 'rgba(182, 208, 226,0.8)'
-                        })
+                        fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Free Cash Flow'],
+                            title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
+                            barmode='relative', color_discrete_map={'Free Cash Flow': 'rgba(220,0,0,0.5)',
+                                                                    'Expense': 'rgba(102,51,153,0.5)',
+                                                                    'Revenue': 'rgba(182, 208, 226,0.8)'})
 
                         fig.update_layout(
                             xaxis=dict(showgrid=False),
@@ -685,8 +674,8 @@ def expense_benchmarking_page():
                             margin=dict(l=400),
                         )
 
-                        # fig.update_traces(marker=dict(color=['rgba(0,215,0,0.65)' if val >= 0 else 'rgba(250,0,0,0.5)' for val in data['Free Cash Flow']]),
-                        #   selector=dict(name='Free Cash Flow'))
+                        fig.update_traces(marker=dict(color=['rgba(0,215,0,0.65)' if val >= 0 else 'rgba(250,0,0,0.5)' for val in data['Free Cash Flow']]),
+                          selector=dict(name='Free Cash Flow'))
 
                         st.plotly_chart(fig)
 
@@ -698,7 +687,6 @@ def expense_benchmarking_page():
                             print(f"step: {st.session_state.step}")
         else:
             st.error("Please upload a Bank statement PDF before submitting.")
-
 
 def verify_address(address):
     endpoint = "https://maps.googleapis.com/maps/api/geocode/json"
