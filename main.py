@@ -602,17 +602,22 @@ def expense_benchmarking_page():
                     st.error("We do not support this bank statement format yet.")
                 else:
                     with st.spinner("Analyzing Results..."):
-                    
-                        rev_data = data['rev_by_month']
-                        exp_data = data['exp_by_month']
-                        cash_flow_data = data['free cash flows']
-
-                        months = list(rev_data.keys())
-
-                        rev_values = [rev_data[month] for month in months]
-                        exp_values = [abs(exp_data[month]) for month in months]
-                        cash_flow_values = [cash_flow_data[month] for month in months]
-
+                        
+                        if data.get('rev_by_month'):
+                            rev_data = data['rev_by_month']
+                            months = list(rev_data.keys())
+                            rev_values = [rev_data[month] for month in months]
+                            data['Revenue'] = data['Revenue'].abs()
+                        if data.get('exp_by_month'):
+                            exp_data = data['exp_by_month']
+                            months = list(exp_data.keys())
+                            exp_values = [abs(exp_data[month]) for month in months]
+                            data['Expense'] = data['Expense'].abs()
+                        if data.get('free cash flows'):
+                            cash_flow_data = data['free cash flows']
+                            cash_flow_values = [cash_flow_data[month] for month in months]
+                            data['Free Cash Flow'] = data['Free Cash Flow']
+                        
                         data = pd.DataFrame({
                             'Month': months,
                             'Revenue': rev_values,
@@ -620,11 +625,7 @@ def expense_benchmarking_page():
                             'Free Cash Flow': cash_flow_values
                         })
                         
-                        # Modify the values to be positive
-                        data['Revenue'] = data['Revenue'].abs()
-                        data['Expense'] = data['Expense'].abs()
-                        data['Free Cash Flow'] = data['Free Cash Flow']
-
+                
                         with st.expander("View Month-wise Results"):
                             html_table = data.to_html(index=False, header=True)
                             st.markdown(f'<style>table {{ width: 800px; margin-bottom:10px;}}</style>', unsafe_allow_html=True)
@@ -658,7 +659,6 @@ def expense_benchmarking_page():
 
                     if st.session_state.get("next_button_enabled"):
                         if st.button("Next"):
-                            # st.session_state.step += 1
                             print(f"step: {st.session_state.step}")
         else:
             st.error("Please upload a Bank statement PDF before submitting.")
