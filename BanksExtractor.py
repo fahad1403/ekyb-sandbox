@@ -101,20 +101,20 @@ class BankExtractor:
     #     # return result, message, metadata
 
     # Function to convert PDF to images using pdf2image library
-    # def convert_pdf_to_images(self,pdf_content_stream):
-    #     images = []
-    #     try:
-    #         pdf_document = fitz.open(stream=pdf_content_stream.read(), filetype="pdf")
-    #         for page_number in range(pdf_document.page_count):
-    #             page = pdf_document.load_page(page_number)
-    #             image_bytes = page.get_pixmap().tobytes()
-    #             image = Image.open(BytesIO(image_bytes))
-    #             images.append(image)
-    #         return images
-    #     except Exception as e:
-    #         # Handle exceptions here if needed
-    #         print("Error:", str(e))
-    #         return []
+    def convert_pdf_to_images(self,pdf_content_stream):
+        images = []
+        try:
+            pdf_document = fitz.open(stream=pdf_content_stream.read(), filetype="pdf")
+            for page_number in range(pdf_document.page_count):
+                page = pdf_document.load_page(page_number)
+                image_bytes = page.get_pixmap().tobytes()
+                image = Image.open(BytesIO(image_bytes))
+                images.append(image)
+            return images
+        except Exception as e:
+            # Handle exceptions here if needed
+            print("Error:", str(e))
+            return []
     
     def __process_pdf_and_detect_labels(self, pdf_content, confidence_threshold=0.85):
         try:
