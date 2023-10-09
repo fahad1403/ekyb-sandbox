@@ -197,11 +197,11 @@ class Banks:
         # try:
             # Read the PDF file using pdfplumber
         with pdfplumber.open(io.BytesIO(pdf_file_path)) as pdf:
-        plain_text_data = []
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            page_text_blocks = page_text.split('\n')
-            plain_text_data.append(page_text_blocks)
+            plain_text_data = []
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                page_text_blocks = page_text.split('\n')
+                plain_text_data.append(page_text_blocks)
 
         # Account information
         if plain_text_data[-1][0] == 'CUSTOMER STATEMENT':
