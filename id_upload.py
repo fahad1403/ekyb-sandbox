@@ -103,36 +103,34 @@ def extract_id_details(uploaded_id):
     pattern = r'(\d{4}/\d{1,2}/\d{1,2}|[۰-۹]{4}/[۰-۹]{1,2}/[۰-۹]{1,2})'
 
     try:
-        nationality=[ele for ele in [ele for ele in result if 'الجنسية' in ele ][0].split('الجنسية') if ele!=''][0].strip()
+        nationality=[ele for ele in [ele for ele in df['res'].iloc[i] if 'الجنسية' in ele ][0].split('الجنسية') if ele!=''][0].strip()
 
         nationality=get_country_code(nationality)
     except:
         nationality=''
     try:
         ## employer
-        employer_ar=[ele for ele in [ele for ele in result if 'صاحب العمل' in ele ]][0]
+        employer_ar=[ele for ele in [ele for ele in df['res'].iloc[i] if 'صاحب العمل' in ele ]][0]
         employer=[ele for ele in employer_ar.split('صاحب العمل') if ele!=''][0].strip()
 
     except:
         employer=''
     try:
         ### issuing place
-        issuing_place_ar=[ele for ele in result if 'مكان الإصدار' in ele][0]
+        issuing_place_ar=[ele for ele in df['res'].iloc[i] if 'مكان الإصدار' in ele][0]
         issuing_place=issuing_place_ar.split('مكان الإصدار')[-1].strip()
     except:
         issuing_place=''
     try:
-        comon_pattern=[ele for ele in [ele for ele in result if (('الإصدار' in ele ) and('مكان' not in ele))][0].split('الإصدار') if ele!=''][0].strip()
+        comon_pattern=[ele for ele in [ele for ele in df['res'].iloc[i] if (('الإصدار' in ele ) and('مكان' not in ele))][0].split('الإصدار') if ele!=''][0].strip()
         matches = re.findall(pattern, comon_pattern)
 
         matches=[eastern_arabic_to_english(ele) for ele in matches]
 
         issuing_date, dob=matches[0],matches[1]
 
-        # dob = eastern_arabic_to_english(dob)
-
-        # issuing_date = hijri_to_gregorian(issuing_date)
-
+        #issuing_date = hijri_to_gregorian(issuing_date)
+        
     except:
         
         try: 
@@ -146,33 +144,40 @@ def extract_id_details(uploaded_id):
                 #issuing_date=hijri_to_gregorian(issuing_date)
             except:
                 issuing_date,dob='',''
-
-    try: 
-
-        id_number=[item for item in result if re.fullmatch(r'\d{10}', item)][0]
-
-    except:
-        id_number=''
-
+    
     try:
-        profession_Ar=[ele for ele in [ele for ele in result if 'المهنة' in ele ]][0]
+
+        #issuing_date_ar,dob_ar=re.findall(pattern, comon_pattern)
+
+        ### Id Number 
+
+        id_number=[item for item in df['res'].iloc[i] if re.fullmatch(r'\d{10}', item)][0]
+        id_number=eastern_arabic_to_english(id_number)
+    
+    except:
+        
+        try:
+            id_number = [ele for ele in eastern_arabic_to_english([ele for ele in [ele for ele in df['res'].iloc[i] if 'الرقم' in ele ][0].split('الرقم') if ele!=''][0].strip()).split(' ') if len(ele)==10][0]
+            id_number=eastern_arabic_to_english(id_number)
+        except:
+            id_number=''
+    
+    try:
+        profession_Ar=[ele for ele in [ele for ele in df['res'].iloc[i] if 'المهنة' in ele ]][0]
 
         profession=[ele for ele in profession_Ar.split('المهنة') if ele!=''][-1]
 
     except:
         profession=''
     try:
-        Name_Index=[result.index(ele) for ele in result if 'وزارة' in ele][0]
-        Name_1=result[Name_Index+1]
+        Name_Index=[extract_arabic_strings(df['res'].iloc[i]).index(ele) for ele in extract_arabic_strings(df['res'].iloc[i]) if 'وزارة' in ele][0]
+        Name_1=extract_arabic_strings(df['res'].iloc[i])[Name_Index+1]
         Name_length=len(Name_1.split(' '))
-        Name_2=[ele for ele in result if (len(ele.split(' '))==Name_length) and (ele!=Name_1)][0]
-
-
-        Name_en=[ele for ele in [Name_1,Name_2] if detect_script(ele)=='English'][0]
-        Name_ar=[ele for ele in [Name_1,Name_2] if ele!=Name_en][0]  
-
+        Name_en=max([ele for ele in clean_special_chars(extract_english_strings(df['res'].iloc[i])) if ele not in ['KINGDOM OF SAUDI ARABIA','MINISTRY OF INTERIOR']], key=lambda x: x.count(' '))
+        Name_ar=[ele for ele in [Name_1,Name_en] if ele!=Name_en][0]  
+        
     except:
-
+        
         Name_en,Name_ar='',''
 
     return {"Name": Name_en, "DOB": dob, "ID Number": id_number}
