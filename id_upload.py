@@ -29,12 +29,28 @@ def get_country_code(name_in_foreign_language):
     translator = Translator()
     translated_country_name = translator.translate(name_in_foreign_language, src='auto', dest='en').text
     
+    # Manual mapping for known challenges or discrepancies in translation
+    manual_mapping = {
+        'ميانمار': 'MMR',  # Myanmar
+        'البحرين': 'BHR',  # Bahrain
+        'اليمن الجنوبي': 'YEM',  # Yemen
+        'فلسطين': 'PSE',  # Palestine
+        'الفلبين': 'PHL',  # Philippines
+        'أفغانستان': 'AFG',  # Afghanistan
+        'سوريا': 'SYR',  # Syria
+        'سري لنكا': 'LKA'  # Sri Lanka
+    }
+    
+    if name_in_foreign_language in manual_mapping:
+        return manual_mapping[name_in_foreign_language]
+    
     try:
         country = pycountry.countries.get(name=translated_country_name)
         return country.alpha_3
     except AttributeError:
         return "Country Not Found"
     
+pattern = r'(\d{4}/\d{1,2}/\d{1,2}|[۰-۹]{4}/[۰-۹]{1,2}/[۰-۹]{1,2})'
 def eastern_arabic_to_english(eastern_numeral):
     arabic_to_english_map = {
         '٠': '0', '۰': '0',
@@ -71,14 +87,32 @@ def distinguish_dates(date_list):
     return hijri_date, gregorian_date
 
 def hijri_to_gregorian(hijri_date):
-    # Split the hijri date
-    year, month, day = map(int, hijri_date.split('/'))
-    
-    # Convert the hijri date to Gregorian
-    gregorian_date = convert.Hijri(year, month, day).to_gregorian()
+    try:
+        # Split the hijri date
+        year, month, day = map(int, hijri_date.split('/'))
+
+        # Convert the hijri date to Gregorian
+        gregorian_date = convert.Hijri(year, month, day).to_gregorian()
     
     # Format the result as a string
-    return f"{gregorian_date.year}/{gregorian_date.month:02}/{gregorian_date.day:02}"
+        return f"{gregorian_date.year}/{gregorian_date.month:02}/{gregorian_date.day:02}"
+    except:
+        return hijri_date
+    
+def extract_dates(input_list):
+    # Regex pattern to match YYYY/MM/DD, YYYY/MM/DD in Arabic numerals, 
+    # and some other variations found in the list
+    pattern = r"(\d{4}/\d{2}/\d{2}|[۰۱۲۳۴۵۶۷۸۹]{4}/[۰۱۲۳۴۵۶۷۸۹]{2}/[۰۱۲۳۴۵۶۷۸۹]{2})"
+    
+    extracted_dates = []
+    for item in input_list:
+        match = re.search(pattern, item)
+        if match:
+            extracted_dates.append(match.group(0))
+        else:
+            extracted_dates.append('')
+    return extracted_dates
+
 
 def detect_script(word):
     arabic_chars = range(0x0600, 0x06FF)  # Arabic Unicode Block
@@ -96,6 +130,27 @@ def detect_script(word):
         return "English"
     else:
         return "Other"
+    
+def extract_english_strings(data):
+    english_strings = []
+    for string in data:
+        if not re.search("[\u0600-\u06FF\d]", string):  # Filters out strings containing Arabic letters or digits
+            english_strings.append(string)
+    return english_strings
+
+def extract_arabic_strings(data):
+    arabic_strings = []
+    for string in data:
+        if re.search("[\u0600-\u06FF]", string):  # Filters out strings containing Arabic letters or digits
+            arabic_strings.append(string)
+    return arabic_strings
+
+def clean_special_chars(data):
+    cleaned_data = []
+    for string in data:
+        cleaned_string = re.sub(r'[^A-Za-z\s]', '', string)  # Retains only alphabets and spaces
+        cleaned_data.append(cleaned_string.strip())  # .strip() removes any leading or trailing spaces
+    return cleaned_data
     
 def extract_id_details(uploaded_id):
     result = detect_text(uploaded_id)
