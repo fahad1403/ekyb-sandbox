@@ -113,7 +113,7 @@ class Banks:
 
             # Transaction extraction
             lst_1 = [sublist[i+1:] for sublist in plain_text_data for i, element in enumerate(
-                sublist) if element.startswith('Date Transaction Details Debit Credit Balance')]
+                sublist) if element.startswith(('Date Transaction Details Debit Credit Balance', 'ﺍﻟﺮﺻﻴﺪ ﺩﺍﺋﻦ ﻣﺪﻳﻦ ﺗﻔﺎﺻﻴﻞ ﺍﻟﻌﻤﻠﻴﺔ ﺍﻟﺘﺎﺭﻳﺦ'))]
 
             new_lst = []
             for sublist in lst_1:
@@ -144,30 +144,50 @@ class Banks:
             descriptions = []
 
             # Extract information from each element in the list
-            for item in filtered_lst:
-                date_match = re.search(date_pattern, item)
-                balance_matches = re.findall(balance_pattern, item)
-
-                if date_match:
-                    dates.append(date_match.group(1))
-                else:
-                    dates.append('')
-
-                if len(balance_matches) >= 3:
-                    running_balances.append(float(balance_matches[-1].replace(',', '')))
-                    credits.append(float(balance_matches[-2].replace(',', '')))
-                    debits.append(-float(balance_matches[-3].replace(',', '')))
-                else:
-                    running_balances.append('')
-                    credits.append('')
-                    debits.append('')
-
-                # Extract description
-                description_match = re.search(date_pattern + r'(.*?)' + balance_pattern, item)
-                if description_match:
-                    descriptions.append(description_match.group(2))
-                else:
-                    descriptions.append('')
+            if '.' in filtered_lst[0].split(' ')[0]:
+                for item in filtered_lst:
+                    date_match = re.search(date_pattern, item)
+                    balance_matches = re.findall(balance_pattern, item)
+                    if date_match:
+                        dates.append(date_match.group(1))
+                    else:
+                        dates.append('')
+                    if len(balance_matches) >= 3:
+                        debits.append(-float(balance_matches[-1].replace(',', '')))
+                        credits.append(float(balance_matches[-2].replace(',', '')))
+                        running_balances.append(float(balance_matches[-3].replace(',', '')))
+                    else:
+                        running_balances.append('')
+                        credits.append('')
+                        debits.append('')
+                    # Extract description
+                    description_match = re.search(date_pattern + r'(.*?)' + balance_pattern, item)
+                    if description_match:
+                        descriptions.append(description_match.group(2))
+                    else:
+                        descriptions.append('')
+            else:
+                    for item in filtered_lst:
+                        date_match = re.search(date_pattern, item)
+                        balance_matches = re.findall(balance_pattern, item)
+                        if date_match:
+                            dates.append(date_match.group(1))
+                        else:
+                            dates.append('')
+                        if len(balance_matches) >= 3:
+                            running_balances.append(float(balance_matches[-1].replace(',', '')))
+                            credits.append(float(balance_matches[-2].replace(',', '')))
+                            debits.append(-float(balance_matches[-3].replace(',', '')))
+                        else:
+                            running_balances.append('')
+                            credits.append('')
+                            debits.append('')
+                        # Extract description
+                        description_match = re.search(date_pattern + r'(.*?)' + balance_pattern, item)
+                        if description_match:
+                            descriptions.append(description_match.group(2))
+                        else:
+                            descriptions.append('')
 
             # Create a DataFrame
             data = {'date': dates, 'description': descriptions, 'credit': credits, 'debit': debits, 'running_balance': running_balances}
