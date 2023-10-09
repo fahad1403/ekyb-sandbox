@@ -683,8 +683,8 @@ def expense_benchmarking_page():
                             margin=dict(l=400),
                         )
 
-                        fig.update_traces(marker=dict(color=['rgba(0,215,0,0.65)' if val >= 0 else 'rgba(250,0,0,0.5)' for val in data['Free Cash Flow']]),
-                          selector=dict(name='Free Cash Flow'))
+                        # fig.update_traces(marker=dict(color=['rgba(0,215,0,0.65)' if val >= 0 else 'rgba(250,0,0,0.5)' for val in data['Free Cash Flow']]),
+                        #   selector=dict(name='Free Cash Flow'))
 
                         st.plotly_chart(fig)
 
