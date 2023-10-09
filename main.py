@@ -586,7 +586,13 @@ def analyze_bank_statement(pdf_file):
     extractor = BankExtractor()
     result = extractor.extract(pdf_bytes=pdf_bytes)
 
-    return result
+    if 'rev_by_month' in result and 'exp_by_month' in result and 'free cash flows' in result \
+        and isinstance(result['rev_by_month'], dict) and result['rev_by_month'] \
+        and isinstance(result['exp_by_month'], dict) and result['exp_by_month'] \
+        and isinstance(result['free cash flows'], dict) and result['free cash flows']:
+        return result
+    else:
+        return None
 
 def expense_benchmarking_page():
     show_progress_bar()
