@@ -128,13 +128,24 @@ def extract_id_details(uploaded_id):
         matches=[eastern_arabic_to_english(ele) for ele in matches]
 
         issuing_date, dob=distinguish_dates(matches)
-        
+
         dob = eastern_arabic_to_english(dob)
 
         issuing_date = hijri_to_gregorian(issuing_date)
 
     except:
-        issuing_date,dob='',''
+        
+        try: 
+            dob=[ele for ele in [ele for ele in df['res'].iloc[i] if 'الميلاد' in ele ][0].split('الميلاد') if ele!=''][0].strip()
+            issuing_date= [ele for ele in [ele for ele in df['res'].iloc[i] if( 'الإصدار' in ele) and ('مكان' not in ele ) ][0].split('الإصدار') if ele!=''][0].strip()
+            #issuing_date=hijri_to_gregorian(issuing_date)
+        except:
+            try:
+                dob=[ele for ele in [ele for ele in df['res'].iloc[i] if 'الميلاد' in ele ][0].split('الميلاد') if ele!=''][-1].strip()
+                issuing_date=[ele for ele in [ele for ele in df['res'].iloc[i] if 'الميلاد' in ele ][0].split('الميلاد') if ele!=''][0].strip('الانتهاء').strip()
+                #issuing_date=hijri_to_gregorian(issuing_date)
+            except:
+                issuing_date,dob='',''
 
     try: 
 
@@ -165,5 +176,3 @@ def extract_id_details(uploaded_id):
         Name_en,Name_ar='',''
 
     return {"Name": Name_en, "DOB": dob, "ID Number": id_number}
-
-
