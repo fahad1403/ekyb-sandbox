@@ -172,7 +172,7 @@ class BankExtractor:
             # Process PDF and detect labels
 
         detected_labels = self.__process_pdf_and_detect_labels(pdf_bytes)
-        detected_labels = ['alrajhi_1']
+        # detected_labels = ['alrajhi_1']
         # print('RAN')
         print("Detected Labels:", detected_labels)
         banks = Banks()
