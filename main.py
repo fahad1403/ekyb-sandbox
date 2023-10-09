@@ -32,8 +32,8 @@ import random
 # import numpy as np
 
 # Define fixed credentials
-USERNAME = "demo"
-PASSWORD = "demo"
+USERNAME = "alraedah"
+PASSWORD = "ekyb-sandbox"
 
 st.set_page_config(layout="wide")
 
