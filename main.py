@@ -185,8 +185,10 @@ def instagram_scrape(business_name):
     result = json.loads(response.text)
     ig_posts = []
 
-    for post in result['result']['posts']:
-        ig_posts.append(post['title'])
+    print(result)
+    if result:
+        for post in result['result']['posts']:
+            ig_posts.append(post['title'])
     
     return ig_posts
 
