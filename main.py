@@ -631,6 +631,12 @@ def expense_benchmarking_page():
                             if data.get('Free Cash Flow'):
                                 data['Free Cash Flow'] = data['Free Cash Flow']
 
+                        max_len = max(len(rev_values), len(exp_values), len(cash_flow_values))
+            
+                        rev_values.extend([0] * (max_len - len(rev_values)))
+                        exp_values.extend([0] * (max_len - len(exp_values)))
+                        cash_flow_values.extend([0] * (max_len - len(cash_flow_values)))
+                        
                         # Create a DataFrame with default values
                         data = pd.DataFrame({
                             'Month': months,
