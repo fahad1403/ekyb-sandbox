@@ -196,11 +196,9 @@ class Banks:
     def riyadh_1(self,pdf_file_path):
         try:
             # Read the PDF file using pdfplumber
-            pdf_document = PdfReader(io.BytesIO(pdf_file_path))
-            # print('after reading bytes')
+            with pdfplumber.open(io.BytesIO(pdf_file_path)) as pdf:
             plain_text_data = []
-
-            for page in pdf_document.pages:
+            for page in pdf.pages:
                 page_text = page.extract_text()
                 page_text_blocks = page_text.split('\n')
                 plain_text_data.append(page_text_blocks)
@@ -233,7 +231,7 @@ class Banks:
                         parts = item.split()
                         number_of_withdrawals = int(parts[0].replace(',', ''))
                         expenses = float(parts[2].replace(',', ''))
-
+            print(f"Details of balc: {expenses}, {revenues}, {closing_balance}, {opening_balance}")
             # Transaction information
             lst_1 = []
 
