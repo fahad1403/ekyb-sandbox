@@ -588,6 +588,7 @@ def analyze_bank_statement(pdf_file):
     
     return result
 
+
 def expense_benchmarking_page():
     show_progress_bar()
     show_progress()
@@ -612,18 +613,21 @@ def expense_benchmarking_page():
                             rev_data = data['rev_by_month']
                             months = list(rev_data.keys())
                             rev_values = [rev_data[month] for month in months]
-                            data['Revenue'] = data['Revenue'].abs()
+                            if data.get('Revenue'):
+                                data['Revenue'] = data['Revenue'].abs()
                         
                         if 'exp_by_month' in data:
                             exp_data = data['exp_by_month']
                             months = list(exp_data.keys())
                             exp_values = [abs(exp_data[month]) for month in months]
-                            data['Expense'] = data['Expense'].abs()
+                            if data.get('Expense'):
+                                data['Expense'] = data['Expense'].abs()
                         
                         if 'free cash flows' in data:
                             cash_flow_data = data['free cash flows']
                             cash_flow_values = [cash_flow_data[month] for month in months]
-                            data['Free Cash Flow'] = data['Free Cash Flow']
+                            if data.get('Free Cash Flow'):
+                                data['Free Cash Flow'] = data['Free Cash Flow']
 
                         # Create a DataFrame with default values
                         data = pd.DataFrame({
