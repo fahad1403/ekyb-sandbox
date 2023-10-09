@@ -156,8 +156,8 @@ class BankExtractor:
 
                 return detected_labels
                 
-                else:
-                    return []
+            else:
+                return []
         except Exception as e:
             return []
             
