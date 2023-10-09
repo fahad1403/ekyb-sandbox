@@ -636,13 +636,17 @@ def expense_benchmarking_page():
                         rev_values.extend([0] * (max_len - len(rev_values)))
                         exp_values.extend([0] * (max_len - len(exp_values)))
                         cash_flow_values.extend([0] * (max_len - len(cash_flow_values)))
-                        
+
+                        data['Positive Cash Flow'] = [value if value >= 0 else 0 for value in data['Free Cash Flow']]
+                        data['Negative Cash Flow'] = [value if value < 0 else 0 for value in data['Free Cash Flow']]
+
                         # Create a DataFrame with default values
                         data = pd.DataFrame({
                             'Month': months,
                             'Revenue': rev_values,
                             'Expense': exp_values,
-                            'Free Cash Flow': cash_flow_values
+                            'Positive Cash Flow': data['Positive Cash Flow'],
+                            'Negative Cash Flow': data['Negative Cash Flow']
                         })
 
                         # Filter out rows with missing data
@@ -657,11 +661,15 @@ def expense_benchmarking_page():
 
                         hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
 
-                        fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Free Cash Flow'],
-                            title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
-                            barmode='relative', color_discrete_map={'Free Cash Flow': 'rgba(220,0,0,0.5)',
-                                                                    'Expense': 'rgba(102,51,153,0.5)',
-                                                                    'Revenue': 'rgba(182, 208, 226,0.8)'})
+                        fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Positive Cash Flow', 'Negative Cash Flow'],
+                        title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
+                        barmode='relative',
+                        color_discrete_map={
+                            'Positive Cash Flow': 'rgba(0,215,0,0.65)',
+                            'Negative Cash Flow': 'rgba(250,0,0,0.5)',
+                            'Expense': 'rgba(102,51,153,0.5)',
+                            'Revenue': 'rgba(182, 208, 226,0.8)'
+                        })
 
                         fig.update_layout(
                             xaxis=dict(showgrid=False),
