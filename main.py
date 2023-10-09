@@ -603,27 +603,38 @@ def expense_benchmarking_page():
                 else:
                     with st.spinner("Analyzing Results..."):
                         
-                        if data.get('rev_by_month'):
+                        months = []
+                        rev_values = []
+                        exp_values = []
+                        cash_flow_values = []
+
+                        if 'rev_by_month' in data:
                             rev_data = data['rev_by_month']
                             months = list(rev_data.keys())
                             rev_values = [rev_data[month] for month in months]
                             data['Revenue'] = data['Revenue'].abs()
-                        if data.get('exp_by_month'):
+                        
+                        if 'exp_by_month' in data:
                             exp_data = data['exp_by_month']
                             months = list(exp_data.keys())
                             exp_values = [abs(exp_data[month]) for month in months]
                             data['Expense'] = data['Expense'].abs()
-                        if data.get('free cash flows'):
+                        
+                        if 'free cash flows' in data:
                             cash_flow_data = data['free cash flows']
                             cash_flow_values = [cash_flow_data[month] for month in months]
                             data['Free Cash Flow'] = data['Free Cash Flow']
-                        
+
+                        # Create a DataFrame with default values
                         data = pd.DataFrame({
                             'Month': months,
                             'Revenue': rev_values,
                             'Expense': exp_values,
                             'Free Cash Flow': cash_flow_values
                         })
+
+                        # Filter out rows with missing data
+                        data = data.dropna()
                         
                 
                         with st.expander("View Month-wise Results"):
@@ -662,6 +673,7 @@ def expense_benchmarking_page():
                             print(f"step: {st.session_state.step}")
         else:
             st.error("Please upload a Bank statement PDF before submitting.")
+
 
 def verify_address(address):
     endpoint = "https://maps.googleapis.com/maps/api/geocode/json"
