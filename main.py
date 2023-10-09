@@ -632,8 +632,8 @@ def expense_benchmarking_page():
                             cash_flow_values = [cash_flow_data[month] for month in months]
                             if data.get('Free Cash Flow'):
                                 data['Free Cash Flow'] = data['Free Cash Flow']
-                                data['Positive Cash Flow'] = [value if value >= 0 else 0 for value in data['Free Cash Flow']]
-                                data['Negative Cash Flow'] = [value if value < 0 else 0 for value in data['Free Cash Flow']]
+                                positive_cash_flow_values = [value if value >= 0 else 0 for value in data['Free Cash Flow']]
+                                negative_cash_flow_values = [value if value < 0 else 0 for value in data['Free Cash Flow']]
 
                         max_len = max(len(rev_values), len(exp_values), len(cash_flow_values))
             
@@ -646,8 +646,8 @@ def expense_benchmarking_page():
                             'Month': months,
                             'Revenue': rev_values,
                             'Expense': exp_values,
-                            'Positive Cash Flow': data['Positive Cash Flow'],
-                            'Negative Cash Flow': data['Negative Cash Flow']
+                            'Positive Cash Flow': positive_cash_flow_values,
+                            'Negative Cash Flow': negative_cash_flow_values
                         })
 
                         # Filter out rows with missing data
