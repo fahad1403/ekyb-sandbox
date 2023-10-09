@@ -99,9 +99,10 @@ def detect_script(word):
     
 def extract_id_details(uploaded_id):
     result = detect_text(uploaded_id)
-
+    df = pd.DataFrame({'res':[result]})
     pattern = r'(\d{4}/\d{1,2}/\d{1,2}|[۰-۹]{4}/[۰-۹]{1,2}/[۰-۹]{1,2})'
-
+    i = 0
+    df['Extracted_data']=''
     try:
         nationality=[ele for ele in [ele for ele in df['res'].iloc[i] if 'الجنسية' in ele ][0].split('الجنسية') if ele!=''][0].strip()
 
@@ -180,6 +181,22 @@ def extract_id_details(uploaded_id):
         
         Name_en,Name_ar='',''
 
-    return {"Name": Name_en, "DOB": dob, "ID Number": id_number}
+    df['Extracted_data'].iloc[i]=[nationality,employer,issuing_date, dob,id_number,profession,Name_en,Name_ar]
+    
+    cols = ['nationality', 'employer', 'issuing_date', 'dob', 'id_number', 'profession', 'Name_en', 'Name_ar']
+
+    for index, col_name in enumerate(cols):
+        df[col_name] = df['Extracted_data'].apply(lambda x: x[index])
+
+    df['dob']=extract_dates(df['dob'].tolist())
+
+    df['dob']=df['dob'].apply(lambda x: eastern_arabic_to_english(x))
+
+    df['issuing_date']=df['issuing_date'].apply(lambda x: eastern_arabic_to_english(x))
+
+    df['issuing_date']=df['issuing_date'].apply(lambda x: hijri_to_gregorian(x)  )
+
+    print(df)
+    # return {"Name": Name_en, "DOB": dob, "ID Number": id_number}
 
 
