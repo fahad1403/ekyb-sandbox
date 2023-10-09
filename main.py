@@ -654,10 +654,11 @@ def expense_benchmarking_page():
                         st.plotly_chart(fig)
 
                         st.session_state.next_button_enabled = True
-                        st.session_state.step += 1
+                        # st.session_state.step += 1
 
                     if st.session_state.get("next_button_enabled"):
                         if st.button("Next"):
+                            st.session_state.step += 1
                             print(f"step: {st.session_state.step}")
         else:
             st.error("Please upload a Bank statement PDF before submitting.")
