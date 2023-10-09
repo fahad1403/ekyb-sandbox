@@ -662,7 +662,7 @@ def expense_benchmarking_page():
                             st.markdown(html_table, unsafe_allow_html=True)
                             # st.write(data)
 
-                        hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
+                        # hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
 
                         fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Positive Cash Flow', 'Negative Cash Flow'],
                         title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
