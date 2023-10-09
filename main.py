@@ -610,6 +610,8 @@ def expense_benchmarking_page():
                         rev_values = []
                         exp_values = []
                         cash_flow_values = []
+                        positive_cash_flow_values = []
+                        negative_cash_flow_values = []
 
                         if 'rev_by_month' in data:
                             rev_data = data['rev_by_month']
@@ -630,15 +632,14 @@ def expense_benchmarking_page():
                             cash_flow_values = [cash_flow_data[month] for month in months]
                             if data.get('Free Cash Flow'):
                                 data['Free Cash Flow'] = data['Free Cash Flow']
+                                data['Positive Cash Flow'] = [value if value >= 0 else 0 for value in data['Free Cash Flow']]
+                                data['Negative Cash Flow'] = [value if value < 0 else 0 for value in data['Free Cash Flow']]
 
                         max_len = max(len(rev_values), len(exp_values), len(cash_flow_values))
             
                         rev_values.extend([0] * (max_len - len(rev_values)))
                         exp_values.extend([0] * (max_len - len(exp_values)))
                         cash_flow_values.extend([0] * (max_len - len(cash_flow_values)))
-
-                        data['Positive Cash Flow'] = [value if value >= 0 else 0 for value in data['Free Cash Flow']]
-                        data['Negative Cash Flow'] = [value if value < 0 else 0 for value in data['Free Cash Flow']]
 
                         # Create a DataFrame with default values
                         data = pd.DataFrame({
