@@ -252,6 +252,6 @@ def extract_id_details(uploaded_id):
     df['issuing_date']=df['issuing_date'].apply(lambda x: hijri_to_gregorian(x)  )
 
     # print(df)
-    return {"Name": df['Name_en'], "DOB": df['dob'], "ID Number": df['id_number']}
+    return {"Name": df['Name_en'].iloc[0], "DOB": df['dob'].iloc[0], "ID Number": df['id_number'].iloc[0]}
 
 
