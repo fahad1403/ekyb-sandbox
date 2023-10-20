@@ -13,7 +13,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime
 import plotly.graph_objects as go
-from constants import THM_RESPONSE
+from constants import THM_RESPONSE, GDRIVE_CREDS, SCOPE, CONTRACT_JSON_DATA
 import subprocess
 import json
 import pandas as pd
@@ -25,10 +25,18 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import time
 from id_upload import extract_id_details
+from vat_zakat_page import extract_vat_zakat_details
+from gosi_extraction import extract_business_gosi_data, extract_consumer_gosi_data
+from admin_dash import admin_dash
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from BanksExtractor import *
 import random
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+import tempfile
+import mimetypes
 # import numpy as np
 
 # Define fixed credentials
@@ -40,11 +48,14 @@ st.set_page_config(layout="wide")
 if 'step' not in st.session_state:
     st.session_state.step = 0
 
+if 'admin_step' not in st.session_state:
+    st.session_state.admin_step = 0
+
 # Define a function to check credentials
 def check_credentials(username, password):
     return username == USERNAME and password == PASSWORD
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "streamlit-connection-b1a38b694505 (1).json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vision_creds.json"
 
 def extract_text_from_pdf(pdf_file):
     client = vision.ImageAnnotatorClient()
@@ -260,52 +271,256 @@ def eastern_arabic_to_english(eastern_numeral):
     return english_numeral
 
 def gcloud_translate(text, src='ar', dest='en'):
-    translate_client = translate.Client()
+    translate_client = translate.Client.from_service_account_json('translate_creds.json')
     result = translate_client.translate(text, source_language=src, target_language=dest)
     return result['translatedText']
 
-# Login Page
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header{visibility:hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+def check_admin_credentials(username, password):
+    if username == "admin" and password == "admin":
+        return True
+    return False
+st.markdown(
+    """
+    <style>
+    .viewerBadgeContainer { display: none; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+# Hide the "Made with Streamlit" footer
+st.markdown(
+    """
+    <style>
+    .viewerBadge { display: none; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+def set_custom_css():
+    custom_css = """
+    <style>
+     .title {
+    color: #3498db; /* Title color */
+    font-size: 36px; /* Title font size */
+    font-weight: bold; /* Bold font weight */
+    text-align: center; /* Text alignment */
+    margin-bottom: 20px; /* Add some spacing below the title */
+ 
+} 
+   .creds{
+   color:white;
+    font-weight:bold;
+   }
+ .stTextInput  > label {
+    color:white;
+    font-weight:bold;
+    }
+    .st-emotion-cache-1gulkj5{
+    background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
+    }
+    .st-emotion-cache-r421ms{
+    background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
+    }
+    # .st-emotion-cache-10trblm{
+    #  color:white;
+    # font-weight:bold;
+    # align:center
+    # text-align:center;
+    # }
+    # .st-emotion-cache-1aehpvj{
+    # color:white;
+    # font-weight:bold;
+    # align:center
+    # text-align:center;
+    # }
+    # .st-emotion-cache-1fttcpj{
+    # color:white;
+    # font-weight:bold;
+    # align:center
+    # text-align:center;
+    # }
+    .stButton>button {
+        display: block;
+        margin: 0 auto;
+        align-items: center;
+        background-image: linear-gradient(144deg, #AF40FF, #5B42F3 50%, #00DDEB);
+        border: 0;
+        border-radius: 6px;
+        box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
+        box-sizing: border-box;
+        color: #FFFFFF;
+        display: flex;
+        font-family: Phantomsans, sans-serif;
+        font-size: 20px;
+        justify-content: center;
+        line-height: 1em;
+        max-width: 100%;
+        min-width: 140px;
+        padding: 19px 24px;
+        text-decoration: none;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .stButton>button:hover {
+        color: #00FF00 !important;
+    }
+    .stButton>button:active {
+        color: #00FF00 !important;
+    }
+    @media (max-width: 768px) {
+        .stButton>button {
+            font-size: 16px;
+            padding: 15px 20px;
+        }
+    }
+    .st-emotion-cache-9ycgxx{
+    color:white;
+    font-weight:bold;
+    # text-align:right;
+    # align:right;
+    }
+    .st-emotion-cache-1aehpvj{
+     color:white;
+    font-weight:bold;
+    #  text-align:right;
+    # align:right;
+    }
+    @media screen and (max-width: 768px) {{
+        .st-emotion-cache-5rimss {{
+            width: 100%;
+        }}
+        .st-emotion-cache-5rimss {{
+            width: {value}%;
+            font-size: 10px;
+        }}
+    }}
+    @media (max-width: 768px){
+    .st-emotion-cache-5rimss{
+     width: 100%;
+    }
+    .st-emotion-cache-5rimss{
+    width: {value}%;
+    font-size: 10px;
+    }
+    }
+    @media (max-width: 768px){
+    .st-emotion-cache-fg4pbf {
+     font-size: 12px;
+    }
+    }
+    </style>
+    """
+    st.markdown(custom_css, unsafe_allow_html=True)
+   
 def login_page():
-    st.title("Login Page")
+    set_custom_css()
+#     # Apply the custom CSS styles
+#     custom_css = """
+#     <style>
+#     .creds {
+#     align:center;
+#     color: #5e4fa2;
+# }
+# </style>
+# """
+    logo_url='https://objectstorage.me-jeddah-1.oraclecloud.com/n/idcsprod/b/me-jeddah-idcs-1-9E6C09D36371AB1B7C12FA52FA120B95980D070A43765EF7F2A2F0B0F82948E6/o/images/202109131530/1631547034999/Alraedah-Logo-Landscape-2.jpg'
+    # st.markdown(custom_css, unsafe_allow_html=True)
+  # Center the image dynamically based on screen width
+    st.markdown(
+    f"""
+    <style>
+    .center-image {{
+        display: flex;
+        justify-content: center;
+    }}
+    </style>
+    <div class="center-image">
+        <img src="{logo_url}" width="150" alt="Logo">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+# Create the styled title
+    st.markdown('<h1 class="title">Login Page</h1>', unsafe_allow_html=True)
     # Use st.empty() to create placeholders for input fields and messages
     placeholder = st.empty()
-    with placeholder.form("login"):
-        st.markdown("#### Enter your credentials")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submit = st.form_submit_button("Login")
+   # Create a custom container for the login form with a background image
+   
+    st.markdown(
+    """
+    <div class="login" style="background-image: url('ekyb_background-image.jpg'); background-size: cover; background-attachment: fixed;">
+        <div style="padding: 20px;">
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)  
+    tab1, tab2 = st.tabs(["User Login", "Admin Login"])
+    # active_tab = st.radio("Select an option", tabs)
+    with tab1:
+        placeholder = st.empty()
+        with placeholder.form("login"):
+            st.markdown('<h2 class="creds">Enter your Credentials</h2>', unsafe_allow_html=True)
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            submit = st.form_submit_button("Login")
+
+        if submit and check_credentials(username, password):
+            st.success("Login successful! Proceed to the CR verification screen.")
+            st.session_state.step = 1
+            st.session_state.login_page = True
+        elif submit and not check_credentials(username, password):
+            st.error("Login failed. Please check your credentials.")
+
+    with tab2:
+        admin_placeholder = st.empty()
+        with admin_placeholder.form("admin_login"):
+            st.markdown('<h2 class="creds">Enter Admin Credentials</h2>', unsafe_allow_html=True)
+            admin_username = st.text_input("Username")
+            admin_password = st.text_input("Password", type="password")
+            submit = st.form_submit_button("Login")
+
+        if submit and check_admin_credentials(admin_username, admin_password):
+            st.success("Admin Login successful! Redirecting to Admin Dashboard.")
+            st.session_state.admin_step = 1
+            st.session_state.admin_login_page = True
+        elif submit and not check_admin_credentials(admin_username, admin_password):
+            st.error("Admin Login failed. Please check your credentials.")
+
+# # Login Page
+# def login_page():
+#     st.title("Login Page")
+#     # Use st.empty() to create placeholders for input fields and messages
+#     placeholder = st.empty()
+#     with placeholder.form("login"):
+#         st.markdown("#### Enter your credentials")
+#         username = st.text_input("Username")
+#         password = st.text_input("Password", type="password")
+#         submit = st.form_submit_button("Login")
     
-    if submit and check_credentials(username, password):
-        # placeholder.empty()
-        st.session_state.step = 0
-        st.success("Login successful! Proceed to the CR verification screen.")
+#     if submit and check_credentials(username, password):
+#         # placeholder.empty()
+#         st.session_state.step = 0
+#         st.success("Login successful! Proceed to the CR verification screen.")
         
-        st.session_state.login_page = True
+#         st.session_state.login_page = True
     
-    elif submit and not check_credentials(username, password):
-        st.error("Login failed. Please check your credentials.")
+#     elif submit and not check_credentials(username, password):
+#         st.error("Login failed. Please check your credentials.")
 
-    # username_placeholder = st.empty()
-    # password_placeholder = st.empty()
-    # login_status = st.empty()
-
-    # username = username_placeholder.text_input("Username:")
-    # password = password_placeholder.text_input("Password:", type="password")
-    
-    # login_button = st.button("Login")
-
-    # if login_button:
-    #     if check_credentials(username, password):
-    #         # Display a success message and set the session state variable
-    #         st.session_state.step = 0
-    #         st.session_state.login_page = True
-    #         login_status.success("Login successful! Proceed to the cr verification screen.")
-            
-    #     else:
-    #         # Display an error message
-    #         login_status.error("Login failed. Please check your credentials.")
-
-steps = ["CR verification", "ID Verification", "Expense Analysis", "Web Analysis", "Address verification", "Social Checks ", "Fraud Analysis", "AML/PEP/Sanctions"]
+steps = ["", "CR verification", "Contract Issuing", "VAT/Zakat", "Gosi", "ID Verification", "Expense Analysis", "Web Analysis", "Address verification", "Social Checks ", "Fraud Analysis", "PEP & AML"]
 
 def show_progress():
     progress_html = "<div style='display: flex; justify-content: space-between; align-items: center; width: 100%;'>"
@@ -406,10 +621,44 @@ def verify_business_details(ocr_result, wathq_result):
     print(f"Flag: {flag}")
     return flag
 
+def upload_to_drive(data, file_name):
+    credentials = Credentials.from_service_account_file('gdrive_creds.json')  # Replace with your JSON credentials
+    drive_service = build('drive', 'v3', credentials=credentials)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(data)
+        temp_file_path = temp_file.name
+
+    # r_no = random.randint(10**9, 10**10 - 1)
+
+    file_metadata = {
+        'name': file_name
+        }  # Replace with your folder ID
+    
+    mime_type, _ = mimetypes.guess_type(file_name)
+    if mime_type is None:
+        mime_type = 'application/octet-stream'
+    print(f"mime type: {mime_type}")
+
+    media = MediaFileUpload(temp_file_path, mimetype=mime_type)
+    file = drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+    drive_service.permissions().create(
+        fileId=file.get('id'),
+        body={'type': 'anyone', 'role': 'reader'},
+        fields='id'
+    ).execute()
+
+    return file.get('id')  
+
 def cr_entry_page():
+    st.session_state['gsheet_data'] = {}
+    #global st.session_state['gsheet_data']
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    st.session_state['gsheet_data']['Timestamp'] = timestamp
     show_progress_bar()
     show_progress()
-    st.title("C/R - Verification")
+    set_custom_css()
+    st.markdown('<h1 class="title">C/R - Verification</h1>',unsafe_allow_html=True)
     pdf_file = st.file_uploader("Upload a C/R Document(PDF only)", type=["pdf"])
     submit_button = st.button("Submit")
 
@@ -420,12 +669,11 @@ def cr_entry_page():
             with st.spinner("Fetching data..."): 
                 business_details_container = st.empty()
                 pdf_text = extract_text_from_pdf(pdf_file)
-                # st.write(pdf_text)
                 translated_pdf_text1 = translate_arabic_to_english(pdf_text)
                 translated_pdf_text2 = gcloud_translate(pdf_text)
                 # st.write(translated_pdf_text2)
-
                 ocr_result = smart_ocr_on_cr_doc(translated_pdf_text1, translated_pdf_text2)
+                st.session_state['gsheet_data']['CR_DATA'] = json.dumps(ocr_result)
                 cr_number = ocr_result.get('cr_number')
                 business_name = ocr_result.get('business_name')
                 business_owner_1 = ocr_result.get('business_owner_1')
@@ -438,6 +686,11 @@ def cr_entry_page():
             if empty_string_keys:
                 st.error("Please upload a Valid CR Document PDF")
             else:
+                uploaded_pdf_content = pdf_file.read()
+                file_name = pdf_file.name
+                file_id = upload_to_drive(uploaded_pdf_content, file_name)
+                pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                st.session_state['gsheet_data']['CR_PDF'] = pdf_file_url
 
                 matches = re.findall(r'\w+\s+\w+', business_owner_1)
                 if len(matches) >= 2:
@@ -448,6 +701,7 @@ def cr_entry_page():
                     business_owner_name = business_owner_1
                 
                 st.session_state.owner_name = business_owner_name
+                st.session_state.cr_number = cr_number
 
                 # Clear the previous business details
                 business_details_container.empty()
@@ -468,9 +722,13 @@ def cr_entry_page():
                     print(f"\n\nwathq result: {wathq_result}")
                     
                     if raw_result:
+                        st.session_state['gsheet_data']['CR_DATA_WATHQ'] = json.dumps(raw_result)
                         with st.expander("Complete Verification"):
                             st.json(raw_result)
+                    else:
+                        st.session_state['gsheet_data']['CR_DATA_WATHQ'] = ''
 
+                    print(f"\n\n1st: {st.session_state['gsheet_data']}\n")
                     if wathq_result:
                         if verify_business_details(ocr_result, wathq_result):
                             business_details_container.empty()
@@ -480,11 +738,11 @@ def cr_entry_page():
                             st.success(f"Business Owner: {business_owner_name} ✅")
                             if expiry_date_hijri:
                                 st.success(f"CR Expiry Date: {expiry_date_hijri} ✅")
-                            else:
+                            elif wathq_result.get('cr_expiry_date'):
                                 st.success(f"CR Expiry Date: {wathq_result['cr_expiry_date']} ✅")
                             if location:
                                 st.success(f"Business Address: {location} ✅")
-                            else:
+                            elif wathq_result.get('address'):
                                 st.success(f"Business Address: {wathq_result['address']} ✅")
 
                             st.session_state.next_button_enabled = True
@@ -505,15 +763,15 @@ def cr_entry_page():
                         st.success(f"Business Owner: {business_owner_name} ✅")
                         if expiry_date_hijri:
                             st.success(f"CR Expiry Date: {expiry_date_hijri} ✅")
-                        else:
+                        elif wathq_result.get('cr_expiry_date'):
                             st.success(f"CR Expiry Date: {wathq_result['cr_expiry_date']} ✅")
                         if location:
                             st.success(f"Business Address: {location} ✅")
-                        else:
-                            st.success(f"Business Address: {location} ✅")
+                        elif wathq_result.get('address'):
+                            st.success(f"Business Address: {wathq_result['address']} ✅")
                         
                         st.session_state.next_button_enabled = True
-                        st.session_state.next_page = "idv_page"
+                        st.session_state.next_page = "wathq_contract"
 
                         st.session_state.next_button_enabled = True
                         st.session_state.step += 1
@@ -523,27 +781,264 @@ def cr_entry_page():
                     print(f"step: {st.session_state.step}")
             # st.session_state.next_page = "similar_web_page"
 
+def generate_wathq_contract_data(complete_data):
+    filled_data = json.loads(CONTRACT_JSON_DATA)
+    import random
+    # Mapping contract data
+    filled_data["contract"]["basicInfo"]["contractNumber"] = str(random.randint(10**9, 10**10 - 1))
+    filled_data["contract"]["basicInfo"]["contractCopyNumber"] = str(random.randint(10**9, 10**10 - 1))
+    filled_data["contract"]["basicInfo"]["establishmentDate"] = complete_data["company"]["startDate"]  # Mapping establishmentDate from company startDate
+    filled_data["contract"]["basicInfo"]["companyAddress"] = complete_data["address"]["general"]["address"]
+    filled_data["contract"]["crInfo"]["crNo"] = str(complete_data["crNumber"])
+    filled_data["contract"]["crInfo"]["companyFullName"] = complete_data["crName"]
+    filled_data["contract"]["companyForm"]["companyFormDescriptionAr"] = complete_data["businessType"]["name"]
+    filled_data["contract"]["activities"][0]["activityDescriptionAr"] = complete_data["activities"]["isic"][0]["name"]
+
+    # Mapping company capital data
+    filled_data["contract"]["companyCapital"]["capital"] = complete_data["capital"]["paidAmount"]
+    filled_data["contract"]["companyCapital"]["cashCapital"] = complete_data["capital"]["paidAmount"]
+    filled_data["contract"]["companyCapital"]["totalCashContribution"] = complete_data["capital"]["paidAmount"]
+    filled_data["contract"]["companyCapital"]["contributionValue"] = complete_data["capital"]["share"]["sharesCount"]
+
+    # Mapping partners data
+    # for i, partner in enumerate(complete_data["parties"]):
+    # print(f"i val: {i}")
+    partner = complete_data["parties"][1]
+    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"] = {}
+    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["identifierNo"] = partner["identity"]["id"]
+    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["birthDate"] = partner.get("birthDate")
+    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["firstNameAr"] = partner["name"]
+    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["genderDescriptionAr"] = partner["relation"]["name"]
+    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["nationalityDescriptionAr"] = partner["nationality"]["name"]
+
+    # Mapping managers data
+    # for i, manager in enumerate(complete_data["parties"]):
+    # if manager["relation"]["name"] == "مدير":
+    filled_data["managers"][0]["managerBasicInfo"]["identifierNo"] = partner["identity"]["id"]
+    filled_data["managers"][0]["managerBasicInfo"]["birthDate"] = partner.get("birthDate")
+    filled_data["managers"][0]["managerBasicInfo"]["firstNameAr"] = partner["name"]
+    filled_data["managers"][0]["managerBasicInfo"]["genderDescriptionAr"] = partner["relation"]["name"]
+    filled_data["managers"][0]["managerBasicInfo"]["nationalityDescriptionAr"] = partner["nationality"]["name"]
+
+    # Convert the filled data back to JSON
+    filled_json_result = json.dumps(filled_data, indent=4, ensure_ascii=False)
+
+    # Printing the filled JSON
+    print(filled_json_result)
+
+    return filled_json_result
+
+def wathq_contract_issuing():
+    show_progress_bar()
+    show_progress()
+    set_custom_css()
+    st.markdown('<h1 class="title">Contract Issuing - Wathq</h1>',unsafe_allow_html=True)
+    cr_number = st.session_state.get('cr_number')
+    cr_number = st.text_input("CR Number", cr_number)
+    submit_button = st.button("Get Results")
+    
+    if submit_button:
+        with st.spinner(f"Fetching data for {cr_number} ..."):
+            time.sleep(2)
+            wathq_data = st.session_state['gsheet_data'].get('CR_DATA_WATHQ')
+            wathq_data = json.loads(wathq_data)
+            wathq_contract_data = generate_wathq_contract_data(wathq_data)
+
+            with st.expander("Wathq Contract Verification"):
+                st.json(wathq_contract_data)
+        
+                st.session_state.next_button_enabled = True
+                st.session_state.next_page = "vat_page"
+
+                st.session_state.next_button_enabled = True
+                st.session_state.step += 1
+
+            if st.session_state.get("next_button_enabled"):
+                if st.button("Next"):
+                    print(f"step: {st.session_state.step}")
+
+def vat_zakat_page():
+    show_progress_bar()
+    show_progress()
+    set_custom_css()
+    st.markdown('<h1 class="title">Zakat/VAT - Verification</h1>',unsafe_allow_html=True)
+    pdf_file = st.file_uploader("Upload a VAT/Zakat Document(PDF only)", type=["pdf"])
+    submit_button = st.button("Submit")
+
+    if submit_button:
+        if not pdf_file:
+            st.error("Please upload a PDF document before submitting.")
+        else:
+            with st.spinner("Reading ZAKAT/VAT Document..."):
+                pdf_text = extract_text_from_pdf(pdf_file)
+                ocr_result = extract_vat_zakat_details(pdf_text)
+                st.session_state['gsheet_data']['VAT_Data'] = json.dumps(ocr_result)
+
+                uploaded_pdf_content = pdf_file.read()
+                file_name = pdf_file.name  # Get the file name
+                file_id = upload_to_drive(uploaded_pdf_content, file_name)
+                pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                st.session_state['gsheet_data']['VAT_PDF'] = pdf_file_url
+
+                print(f"\n\n2nd: {st.session_state['gsheet_data']}")
+
+                with st.expander("Extracted Details from Zakat/VAT"):
+                    df = pd.DataFrame([ocr_result])
+                    st.write(df)
+                
+                st.session_state.next_button_enabled = True
+                st.session_state.next_page = "gosi_page"
+
+                st.session_state.next_button_enabled = True
+                st.session_state.step += 1
+
+            if st.session_state.get("next_button_enabled"):
+                if st.button("Next"):
+                    print(f"step: {st.session_state.step}")
+
+def business_gosi_page():
+    show_progress_bar()
+    show_progress()
+    set_custom_css()
+    st.markdown('<h1 class="title">GOSI Data Verification</h1>',unsafe_allow_html=True)
+    gosi_type = st.selectbox("Select GOSI Type", ("Business GOSI", "Customer/Personal GOSI"))
+
+    if gosi_type == "Business GOSI":
+        pdf_file = st.file_uploader("Upload Business GOSI Document(PDF only)", type=["pdf"])
+        submit_button = st.button("Submit")
+
+        if submit_button:
+            if not pdf_file:
+                st.error("Please upload a PDF document before submitting.")
+            else:
+                with st.spinner("Reading GOSI Document..."):
+                    pdf_text = extract_text_from_pdf(pdf_file)
+                    ocr_result = extract_business_gosi_data(pdf_text)
+                    st.session_state['gsheet_data']['BUSINESS_GOSI_Data'] = json.dumps(ocr_result)
+
+                    uploaded_pdf_content = pdf_file.read()
+                    file_name = pdf_file.name  # Get the file name
+                    file_id = upload_to_drive(uploaded_pdf_content, file_name)
+                    pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                    st.session_state['gsheet_data']['BUSINESS_GOSI_PDF'] = pdf_file_url
+
+                    print(f"\n\n3rd: {st.session_state['gsheet_data']}")
+
+                    with st.expander("Extracted Details from GOSI Document"):
+                        df = pd.DataFrame([ocr_result])
+                        st.write(df)
+                    
+                    st.session_state.next_button_enabled = True
+                    st.session_state.next_page = "consumer_gosi"
+
+                    st.session_state.next_button_enabled = True
+                    st.session_state.step += 1
+
+                if st.session_state.get("next_button_enabled"):
+                    if st.button("Next"):
+                        print(f"step: {st.session_state.step}")
+
+        elif gosi_type == "Customer/Personal GOSI":
+            pdf_file = st.file_uploader("Upload Customer's GOSI Document(PDF only)", type=["pdf"])
+            submit_button = st.button("Submit")
+
+            if submit_button:
+                if not pdf_file:
+                    st.error("Please upload a PDF document before submitting.")
+                else:
+                    with st.spinner("Reading GOSI Document..."):
+                        pdf_text = extract_text_from_pdf(pdf_file)
+                        ocr_result = extract_consumer_gosi_data(pdf_text)
+                        st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
+
+                        uploaded_pdf_content = pdf_file.read()
+                        file_name = pdf_file.name  # Get the file name
+                        file_id = upload_to_drive(uploaded_pdf_content, file_name)
+                        pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                        st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
+
+                        print(f"\n\n3rd: {st.session_state['gsheet_data']}")
+                        with st.expander("Extracted Details from GOSI Document"):
+                            df = pd.DataFrame([ocr_result])
+                            st.write(df)
+                        
+                        st.session_state.next_button_enabled = True
+                        st.session_state.next_page = "idv_page"
+
+                        st.session_state.next_button_enabled = True
+                        st.session_state.step += 1
+
+                    if st.session_state.get("next_button_enabled"):
+                        if st.button("Next"):
+                            print(f"step: {st.session_state.step}")
+
+def consumer_gosi_page():
+    # show_progress_bar()
+    # show_progress()
+    # st.title("Customer/Personal GOSI")
+    pdf_file = st.file_uploader("Upload Customer's GOSI Document(PDF only)", type=["pdf"])
+    submit_button = st.button("Submit")
+
+    if submit_button:
+        if not pdf_file:
+            st.error("Please upload a PDF document before submitting.")
+        else:
+            with st.spinner("Reading GOSI Document..."):
+                pdf_text = extract_text_from_pdf(pdf_file)
+                ocr_result = extract_consumer_gosi_data(pdf_text)
+                st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
+
+                uploaded_pdf_content = pdf_file.read()
+                file_name = pdf_file.name  # Get the file name
+                file_id = upload_to_drive(uploaded_pdf_content, file_name)
+                pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
+
+                print(f"\n\n2nd: {st.session_state['gsheet_data']}")
+                with st.expander("Extracted Details from GOSI Document"):
+                    df = pd.DataFrame([ocr_result])
+                    st.write(df)
+                
+                st.session_state.next_button_enabled = True
+                st.session_state.next_page = "idv_page"
+
+                st.session_state.next_button_enabled = True
+                st.session_state.step += 1
+
+            if st.session_state.get("next_button_enabled"):
+                if st.button("Next"):
+                    print(f"step: {st.session_state.step}")
 
 def display_details_in_table(details, id_number):
     df = pd.DataFrame(details, index=[f"ID{id_number}"])
-    st.table(df)
+    st.table(df)  
 
 def idv_page():
+    #global st.session_state['gsheet_data']
     show_progress_bar()
     show_progress()
-    st.title("Business Shareholders Verification")
+    set_custom_css()
+    st.markdown('<h1 class="title">Business Stakeholders Verification</h1>',unsafe_allow_html=True)
     uploaded_ids = []
+    image_id_urls = []
 
     st.header("Upload IDs")
     num_ids_to_upload = st.number_input("How many IDs do you want to upload? (1-3)", 1, 3, 1)
 
     for i in range(num_ids_to_upload):
         uploaded_id = st.file_uploader(f"Upload National ID {i+1}", type=["jpg", "png"])
+
         if uploaded_id:
             uploaded_id_content = uploaded_id.read()
+
             with st.spinner("Fetching data..."):
                 extracted_details = extract_id_details(uploaded_id_content)
                 uploaded_ids.append(extracted_details)
+
+            file_name = uploaded_id.name  # Get the file name
+            file_id = upload_to_drive(uploaded_id_content, file_name)
+            file_url = f"https://drive.google.com/uc?id={file_id}"
+            image_id_urls.append(file_url)
 
     if hasattr(st.session_state, 'owner_name'):
         matching_name = st.session_state.owner_name
@@ -577,6 +1072,12 @@ def idv_page():
 
     # Display the "Next" button below the expander
     if st.session_state.get("next_button_enabled"):
+        id_data_json = ", ".join([json.dumps(data) for data in uploaded_ids])
+        id_image_combined = ', '.join(image_id_urls)
+
+        st.session_state['gsheet_data']['ID_Data'] = id_data_json
+        st.session_state['gsheet_data']['ID_Image'] = id_image_combined
+        print(f"\n\n3rd: {st.session_state['gsheet_data']}")
         st.session_state.step += 1
         if st.button("Next"):
             # Set the next page to "similar_web_page" (you can change this as needed)
@@ -586,14 +1087,15 @@ def analyze_bank_statement(pdf_file):
     pdf_bytes = pdf_file.read()
     extractor = BankExtractor()
     result = extractor.extract(pdf_bytes=pdf_bytes)
-    print(f"Data from BS: {result}")
+    
     return result
 
-
 def expense_benchmarking_page():
+    #global st.session_state['gsheet_data']
     show_progress_bar()
     show_progress()
-    st.title("Revenue/Cash Flow Analysis")
+    set_custom_css()
+    st.markdown('<h1 class="title">Revenue/Cash Flow Analysis</h1>',unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Upload Bank Statement (PDF only)", type=["pdf"])
     
     if st.button("Submit"):
@@ -603,6 +1105,12 @@ def expense_benchmarking_page():
                 if not data:
                     st.error("We do not support this bank statement format yet.")
                 else:
+                    uploaded_pdf_content = uploaded_file.read()
+                    file_name = uploaded_file.name  # Get the file name
+                    file_id = upload_to_drive(uploaded_pdf_content, file_name)
+                    pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                    st.session_state['gsheet_data']['BANK_STATEMENT'] = pdf_file_url
+
                     with st.spinner("Analyzing Results..."):
                         
                         months = []
@@ -637,12 +1145,16 @@ def expense_benchmarking_page():
                         cash_flow_values.extend([0] * (max_len - len(cash_flow_values)))
 
                         # Create a DataFrame with default values
-                        data = pd.DataFrame({
+                        expense_data = {
                             'Month': months,
                             'Revenue': rev_values,
                             'Expense': exp_values,
                             'Free Cash Flow': cash_flow_values
-                        })
+                        }
+
+                        st.session_state['gsheet_data']['Expense_Data'] = json.dumps(expense_data)
+                        print(f"\n\n4th: {st.session_state['gsheet_data']}\n")
+                        data = pd.DataFrame(expense_data)
 
                         # Filter out rows with missing data
                         data = data.dropna()
@@ -650,7 +1162,7 @@ def expense_benchmarking_page():
                 
                         with st.expander("View Month-wise Results"):
                             html_table = data.to_html(index=False, header=True)
-                            st.markdown(f'<style>table {{ width: 800px; margin-bottom:10px;}}</style>', unsafe_allow_html=True)
+                            st.markdown(f'<style>table {{ width: 100%; margin-bottom: 10px; }}</style>', unsafe_allow_html=True)
                             st.markdown(html_table, unsafe_allow_html=True)
                             # st.write(data)
 
@@ -666,15 +1178,18 @@ def expense_benchmarking_page():
                             xaxis=dict(showgrid=False),
                             yaxis=dict(showgrid=False),
                             plot_bgcolor='white',
-                            width=950,
-                            height=700,
-                            margin=dict(l=400),
+                            # width=950,
+                            # height=700,
+                            # margin=dict(l=400),
                         )
 
                         fig.update_traces(marker=dict(color=['rgba(0,215,0,0.65)' if val >= 0 else 'rgba(250,0,0,0.5)' for val in data['Free Cash Flow']]),
                           selector=dict(name='Free Cash Flow'))
-
-                        st.plotly_chart(fig)
+                         # Define a minimum height for the chart (adjust this value as needed)
+                        min_chart_height = 800  # You can change this value
+                        # Use use_container_width=True for automatic width adjustment
+                        st.plotly_chart(fig, use_container_width=True, use_container_height=False, height=min_chart_height)
+                        # st.plotly_chart(fig)
 
                         st.session_state.next_button_enabled = True
                         st.session_state.step += 1
@@ -772,16 +1287,23 @@ def check_address_from_google(company_name, company_address):
     print(f"address: {google_address}")
     if google_address:
         if fuzzy_match_fields(company_address.lower(), google_address.lower()):
-            return True
+            return True, google_address
         else:
-            return False
+            return False, ''
+    else:
+        return False, ''
 
 def address_verification_page():
+    #global st.session_state['gsheet_data']
     show_progress_bar()
     show_progress()
-    st.title("Address Verification")
+    set_custom_css()
+    st.markdown('<h1 class="title">Address Verification</h1>',unsafe_allow_html=True)
 
     address = st.text_input("Enter address of the business", placeholder="Eg. Al Salam Tecom Tower, Dubai Media City, UAE")
+    address_dict = {
+        'user_address': address,
+    }
 
     if st.button("Submit"):
         if address and check_address_length(address):
@@ -794,7 +1316,9 @@ def address_verification_page():
                     company_name = st.session_state.company_name
                     company_name = company_name.lower()
                     with st.spinner(f"checking {company_name}'s address on google"):
-                        google_address_result = check_address_from_google(company_name, address)
+                        google_address_result, address = check_address_from_google(company_name, address)
+                        address_dict['google_address'] = address
+                        st.session_state['gsheet_data']['Address'] = json.dumps(address_dict)
                         is_address_valid = google_address_result
 
                 country_name = data['results'][0]['address_components'][-1]['short_name']
@@ -883,13 +1407,24 @@ def generate_fake_similar_web_data(WEB_ANALYSIS_DATA, WEB_AVERAGE_DURATION_DATA)
             yaxis=dict(showgrid=False, gridwidth=1, range=[500, 1500], title_font=dict(size=12)),
             plot_bgcolor='white',
             font=dict(size=12),
-            width=950,
-            height=700,
-            margin=dict(l=350),
+            # width=950,
+            # height=700,
+            # margin=dict(l=350),
         )
         fig1.update_traces(marker_color='rgba(102,51,153,0.5)')
-
-        st.plotly_chart(fig1)
+        st.plotly_chart(fig1, use_container_width=True, use_container_height=True)
+        #  # Use use_container_width=True for automatic width and height adjustment
+        # st.plotly_chart(fig1, use_container_width=True, use_container_height=True)
+        # # Custom CSS for centering the chart on small screens
+        # st.markdown("""
+        # <style>
+        #     @media (max-width: 768px) {
+        #         .stPlotlyChart {
+        #             margin: 0 auto;
+        #         }
+        #     }
+        # </style>
+        # """, unsafe_allow_html=True)
 
     with tab2:
         # Create the second chart for average visit duration
@@ -905,13 +1440,13 @@ def generate_fake_similar_web_data(WEB_ANALYSIS_DATA, WEB_AVERAGE_DURATION_DATA)
             yaxis=dict(showgrid=False, gridwidth=1, range=[0, 80], title_font=dict(size=12)),
             plot_bgcolor='white',
             font=dict(size=12),
-            width=950,
-            height=700,
-            margin=dict(l=350),
+            # width=950,
+            # height=700,
+            # margin=dict(l=350),
         )
         fig2.update_traces(marker_color='rgba(182, 208, 226,0.8)')  # The last value (0.5) controls transparency
         
-        st.plotly_chart(fig2)
+        st.plotly_chart(fig2,use_container_width=True,user_container_height=True)
     
     with tab3:
         gender_data = np.random.choice(['Male', 'Female'], size=1000)
@@ -942,21 +1477,21 @@ def generate_fake_similar_web_data(WEB_ANALYSIS_DATA, WEB_AVERAGE_DURATION_DATA)
 
         # Create a bar chart for age distribution with y-axis from 0 to 100
         fig_age = go.Figure(data=[go.Bar(x=age_labels, y=age_percentage)])
-        fig_age.update_layout(title='Age Distribution (Percentage)', width=400, height=400, margin=dict(l=150), yaxis=dict(range=[0, 100]))
+        fig_age.update_layout(title='Age Distribution (Percentage)',yaxis=dict(range=[0, 100]))
         fig_age.update_traces(marker=dict(color='rgba(0, 0, 220, 0.6)'))
 
         # Create two columns layout
         col1, col2 = st.columns(2)
 
         # Display the age distribution bar chart in the first column
-        col1.plotly_chart(fig_age)
+        col1.plotly_chart(fig_age,use_container_width=True,user_container_height=True)
 
         # Display the gender distribution pie chart in the second column
         fig_gender = go.Figure(data=[go.Pie(labels=gender_labels, values=gender_counts)])
         fig_gender.update_traces(hole=.4, hoverinfo="label+percent+name")
-        fig_gender.update_layout(title='Gender Distribution', width=300, height=400)
+        fig_gender.update_layout(title='Gender Distribution')
 
-        col2.plotly_chart(fig_gender)
+        col2.plotly_chart(fig_gender,use_container_width=True,user_container_height=True)
 
 
 def save_data_to_sheet(url, timestamp, traffic_data, duration_data, sheet):
@@ -977,29 +1512,18 @@ def get_data_from_sheet(url, sheet):
     return None, None, None
 
 def similar_web_page():
+    #global st.session_state['gsheet_data']
     show_progress_bar()
     show_progress()
-    GDRIVE_CREDS = {
-    "type": "service_account",
-    "project_id": "st-project-387317",
-    "private_key_id": "e5778cc6315dac8480eb841efa093147fa47d996",
-    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCwK8/wpxa4JRWx\n7KfObiLoebmjLrAjYpv8E+3yTHqp3X+p/xBgQYrics//LCX8sXsFG77dW4vLib0V\nw2U4uygIvi2juzQKGUpDlb9aZ2jKexuToX+UZoa+RUxZICX+J0oDylK3vqcfsPAD\nhivGzveZSmW9cuuop1PMT/nl9vjEzUjcP3YrCcoMdRCUyVj21u3Vy6Qy0zkZU+iv\nZUfQo4kqDQuQU3qSrgvHrzx/zxhLcHvYXKXcaz31Llbd9kyKo35zaq8XnNOAczpn\ncVmeFbxkcrYfu8JtyIv97lOgTHsuxIDauJ8of5I+3Ng+wMW8uo7z8KawBM8a/YFA\nQzVBP0YLAgMBAAECggEAO4oDE90Uk5WM+H331I9qYtFIyPqtcrgP6ai+oUXxqtj+\nHXDjkvRzwMZ2v1GnYPiGkBppbhxTaa2aZvGLkxnFlPbZK93H36XecGr6qc4LH2tt\nzX4mRPxFi6aWAAUacgPLQu6s+AaKKu68nyRIRT+LdJYtPlLJjE1Ix+M7nNnUB4ad\nsJgG0KiMJib4q721VoEpQCfzgNsKN2TX0pJovokNv8slULMKouul94bSfRn7WeEo\nSyVceewz2JNMmym529bcnrdkSWujLEzXrA5V8GFaNgUcc+oSDlm7maPu9uSMFTv/\nceXgCKikYqik5XOFXjy4xpOnTII9cMUi8nkEWox+AQKBgQDkGBQ0AO1WOWylNCmH\n0Wk53m8701JSOsigG3ZXz7sQYa9rL57bkAk+T4oKL4AS2F14ARo672G2jlga8MY+\nGwBII8eStqtvBgpbfFR458rQT9QmeN59xExHxlDQHq6x9BV27cBb4fr6i9+YnGG0\nGwL3FWx09BSlPgGKIHK8xITJCwKBgQDFuYEPmf08fNq7fWZHqQvU++ma7iuUSCNW\n0v3YAnWO3EIm0rvFjpXzp7t8crkkcywj6TmFtttMm7mXT5nY53C4nDiLl72d8hfr\nFCTXY1NLgucj9AsM1OZnqV0g0FgXUXPFyr4acjYT990Qf9HF/KHLZztkLuxci5jb\np7zht4+XAQKBgQCOBiw2QUmGwdTTfQpLBmqV3Nm4D5oXl4CqqM7kWHVq+thGTm2E\n20fWI6KZOwBtO4nfmhgiEEHwcOuNQtS9gQSI5rZytQlD5Sf31Q+oBPQ1By/bELHA\n78RrgKF7JU+zgH8JAXsf+zLSZNvB48W2ZodPIGja3cwpI9XDkva+cUMZBwKBgDPB\nqjHuSiaCPDNl0NcjPfCjfHPMsmWfOHjqw/2+Lw2VRE+rS/GbsE7WcjJSSXpsF3rS\n+vawddkozjz4Xjoz4wLACeEoeD8W9wHXBQnIey5B9sUnhZj3RdSOtcz4HIcGEDsP\nJhIAIX26nQhLnRqpVaTLwfUof0B+XiXpU3z2MsUBAoGBAME1VwH07HSFjsjRKK+C\n/GphuvXBpBED1hGX7YIE4mF3HCVM8WilvW+2c5cxOnIPEL/M5W69h8Wl5okojpNQ\ngQiXCEd4PAnRNUeAw7fGq9jnl0ax/wmLIXnDl3czojhpKmrKg5cNhRQw0OYjEZrG\nmAO3VDeMT0xk9E1SoTMqTiEO\n-----END PRIVATE KEY-----\n",
-    "client_email": "collection-app@st-project-387317.iam.gserviceaccount.com",
-    "client_id": "116665121729126589127",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/collection-app%40st-project-387317.iam.gserviceaccount.com",
-    "universe_domain": "googleapis.com"
-    }
-
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+    set_custom_css()
+    scope = SCOPE
     creds = ServiceAccountCredentials.from_json_keyfile_dict(GDRIVE_CREDS, scope)
     client = gspread.authorize(creds)
     sheet = client.open("streamlit_data").worksheet('similar_web_data')
 
-    st.title("Web Traffic Analysis")
+    st.markdown('<h1 class="title">Web Traffic Analysis</h1>',unsafe_allow_html=True)
     company_url = st.text_input("Enter Business Url: ", placeholder="Eg. https://nymcard.com")
+    st.session_state['gsheet_data']['Company_Url'] = company_url
     submit_button = st.button("Submit")
     
     if company_url and submit_button:
@@ -1007,6 +1531,7 @@ def similar_web_page():
             with st.spinner("Checking url..."):
                 time.sleep(1)
             status, company_name = extract_company_name(company_url)
+            st.session_state['gsheet_data']['Company_Name'] = company_name
             if status:
                 with st.spinner("Fetching Results..."):
                     st.session_state.company_url = company_url
@@ -1102,6 +1627,19 @@ def generate_fake_duration_data():
 
 
 def render_progress_bar(value):
+    progress_bar = f"""
+    <style>
+    @media screen and (max-width: 768px) {{
+        .progress-container {{
+            width: 100%;
+        }}
+        .progress-bar {{
+            width: {value}%;
+            font-size: 10px;
+        }}
+    }}
+    </style>
+    """
     # A custom HTML/CSS implementation of a progress bar
     progress_bar = f"""
     <div style="width: 100%; background-color: #f0f0f0; height: 14px; border-radius: 10px;">
@@ -1120,9 +1658,11 @@ def calculate_overall_sentiment(prob1, prob2, prob3):
     return avg_prob, overall_sentiment
 
 def sentiment_scrape():
+    #global st.session_state['gsheet_data']
     show_progress_bar()
     show_progress()
-    st.title("Social Check Result")
+    set_custom_css()
+    st.markdown('<h1 class="title">Social Check Result</h1>',unsafe_allow_html=True)
 
     if st.button("Get Analysis"):
         if hasattr(st.session_state, 'company_url'):
@@ -1132,6 +1672,9 @@ def sentiment_scrape():
             company_name = st.session_state.company_name
             company_name = company_name.lower()
             st.write(f"Getting Results for {company_name}")
+            
+            scrapes = {}
+            sentiments = {}
 
             tweet_list = twitter_scrape(company_name)
             # ig_post_list = ['Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Explore NymCard’s Dubai office, a perfect reflection of their innovative and ambitious nature. The contemporary design promotes collaboration and creativity, while sustainable materials and natural light enhance well-being. Located in a prestigious location, this inspiring workspace embodies NymCard’s dedication to revolutionising the fintech industry. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "The new office of NymCard is a testament to the company's commitment to innovation and excellence. The workspace provides a practical and inspiring environment that encourages collaboration and productivity. Attention to detail is evident in every aspect, from the layout to the materials used. This office reflects NymCard’s values and vision, focusing on both functionality and aesthetics. Overall, it's a workspace that truly embodies the brand's identity. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice", 'Step into NymCard’s Dubai office, featuring distinct areas for meetings, collaboration, and focus. The modern crisp white open ceiling is complemented by retro cork cladding motifs and pastel stretched fabric panels that also serve as acoustic treatments. The space seamlessly blends aesthetics and functionality, providing an ideal workspace for the team. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', '@nymcard Acquires @spotiime To Offer BNPL-in-a-Box For Banks and Financial Institutions "NymCard, the leading payments infrastructure provider in the MENA region, has completed the acquisition of Spotii, a prominent Buy Now Pay Later (BNPL) Fintech operating in key markets including KSA, UAE, and Bahrain." #nymcard #spotii #bnpl #fintechs #financialservices #financialinclusion #bankingnews #bankingindustry #digitaltransformation #digitalpayment #servicesasabusiness #digitalplatform #dailynewspk #news', 'Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Dollar East Exchange Company (Private) Limited and United Bank Limited (UBL) recently signed a Memorandum of Understanding (MOU). Read more 🌐 : https://technologyplus.pk/2023/09/01/ubl-and-dollar-east-exchange-extend-their-strategic-partnership/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . UBL - United Bank Limited Dollar East Exchange Company #fintech #partnership #collaboration #reallife #transactional #growth #DigiKhata #KuudnaPakistan #Fintech #FintechNews #Visa #NymCard #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'The goal was to create a workspace that fosters creativity, productivity, and embodies the NymCard brand ethos. The result is a workspace featuring bespoke niches and curves that enhance collaboration and efficiency in designated activity zones. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "NymCard’s Dubai office: where innovation meets inspiration. The space reflects the brand's creative identity with pastel highlights, layered design, and distinct areas for various activities. It's the perfect workspace for one of the UAE's fastest-growing fintech companies to celebrate success. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice"]
@@ -1149,12 +1692,18 @@ def sentiment_scrape():
             ig_post_list.extend([''] * (max_len - len(ig_post_list)))
             google_reviews_list.extend([''] * (max_len - len(google_reviews_list)))
 
+            scrapes['Twitter'] = tweet_list
+            scrapes['Twitter'] = ig_post_list
+            scrapes['Google'] = google_reviews_list
+
+            st.session_state['gsheet_data']['Social_Check'] = json.dumps(scrapes)
+
             data = {}
             if any(item.strip() for item in tweet_list):
                 data['Twitter'] = tweet_list
 
             if any(item.strip() for item in ig_post_list):
-                data['Instagram'] = ig_post_list
+                data['Twitter'] = ig_post_list
             
             if any(item.strip() for item in google_reviews_list):
                 data['Google Reviews'] = google_reviews_list
@@ -1175,7 +1724,14 @@ def sentiment_scrape():
 
             avg_prob, overall_sentiment = calculate_overall_sentiment(prob1, prob2, prob3)
 
-            fig = make_subplots(rows=2, cols=2, subplot_titles=("Overall Sentiment", "Tweets", "Instagram", "Google Reviews"))
+            sentiments['Twitter'] = prob1
+            sentiments['Instagram'] = prob2
+            sentiments['Google'] = prob3
+            sentiments['Average'] = avg_prob
+
+            st.session_state['gsheet_data']['Sentiments'] = json.dumps(sentiments)
+
+            fig = make_subplots(rows=4, cols=1, subplot_titles=("Overall Sentiment", "Tweets", "Instagram", "Google Reviews"))
 
             progress_bar_html = render_progress_bar(int(avg_prob * 100))
             st.components.v1.html(progress_bar_html, height=21)
@@ -1203,26 +1759,26 @@ def sentiment_scrape():
             # Plot 2: Tweets Sentiment
             labels_tweets = ["Positive", "Negative"]
             values_tweets = [prob1, 1 - prob1]
-            fig.add_trace(go.Bar(x=labels_tweets, y=values_tweets, showlegend=False, marker=dict(color=['rgba(0, 128, 0, 0.5)', 'rgba(255, 0, 0, 0.5)'])), row=1, col=2)
+            fig.add_trace(go.Bar(x=labels_tweets, y=values_tweets, showlegend=False, marker=dict(color=['rgba(0, 128, 0, 0.5)', 'rgba(255, 0, 0, 0.5)'])), row=2, col=1)
 
             # Plot 3: Instagram Sentiment
             ig_labels = ["Positive", "Negative"]
             ig_values = [prob2, 1 - prob2]
-            fig.add_trace(go.Bar(x=ig_labels, y=ig_values, showlegend=False, marker=dict(color=['rgba(0, 128, 0, 0.5)', 'rgba(255, 0, 0, 0.5)'])), row=2, col=1)
+            fig.add_trace(go.Bar(x=ig_labels, y=ig_values, showlegend=False, marker=dict(color=['rgba(0, 128, 0, 0.5)', 'rgba(255, 0, 0, 0.5)'])), row=3, col=1)
 
             # Plot 4: Google Reviews Sentiment
             gr_labels = ["Positive", "Negative"]
             gr_values = [prob3, 1 - prob3]
-            fig.add_trace(go.Bar(x=gr_labels, y=gr_values, showlegend=False, marker=dict(color=['rgba(0, 128, 0, 0.5)', 'rgba(255, 0, 0, 0.5)'])), row=2, col=2)
+            fig.add_trace(go.Bar(x=gr_labels, y=gr_values, showlegend=False, marker=dict(color=['rgba(0, 128, 0, 0.5)', 'rgba(255, 0, 0, 0.5)'])), row=4, col=1)
 
             # Update subplot layout
             fig.update_xaxes(showgrid=False)
             fig.update_yaxes(showgrid=False)
 
             # Increase height of each plot
-            fig.update_layout(height=1000, width=900, title="Sentiment Distribution")
-
-            st.plotly_chart(fig)
+            fig.update_layout(title="Sentiment Distribution")
+            min_height=700
+            st.plotly_chart(fig, use_container_width=True, use_container_height=False,height=min_height)
 
             st.session_state.next_button_enabled = True
             st.session_state.step += 1
@@ -1234,7 +1790,8 @@ def sentiment_scrape():
 def thm_verification():
     show_progress_bar()
     show_progress()
-    st.title("Fraud Analysis")
+    set_custom_css()
+    st.markdown('<h1 class="title">Fraud Analysis</h1>',unsafe_allow_html=True)
     with st.spinner("Identifying Device.."):
         time.sleep(1)
 
@@ -1271,9 +1828,17 @@ def thm_verification():
                     print(f"step: {st.session_state.step}")
 
 def world_check():
+
     show_progress_bar()
     show_progress()
-    st.title("AML/PEP/Sanctions Screening")
+    set_custom_css()
+    st.markdown('<h1 class="title">AML/PEP/Sanctions Screening</h1>',unsafe_allow_html=True)
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(GDRIVE_CREDS, SCOPE)
+    client = gspread.authorize(creds)
+    gsheet = client.open("streamlit_data").worksheet('flow_data')
+    print(st.session_state['gsheet_data'])
+    gsheet.append_row(list(st.session_state['gsheet_data'].values()), value_input_option='USER_ENTERED', insert_data_option='INSERT_ROWS', table_range="A1")
+    st.session_state['gsheet_data'] = {}
 
     company_name = ""
     if hasattr(st.session_state, 'company_name'):
@@ -1296,21 +1861,36 @@ def world_check():
             for _ in range(3):
                 st.markdown('<p style="font-size:24px; padding-top:16px">✅</p>', unsafe_allow_html=True)
 
+if st.session_state.admin_step == 1:
+    st.session_state.login_page = True
+    st.session_state.step=15
+    admin_dash()
+
 if 'login_page' not in st.session_state:
     login_page()
-elif st.session_state.step == 0:
-    cr_entry_page()
 elif st.session_state.step == 1:
-    idv_page()
+    cr_entry_page()
 elif st.session_state.step == 2:
-    expense_benchmarking_page()
+    wathq_contract_issuing()
 elif st.session_state.step == 3:
-    similar_web_page()
+    vat_zakat_page()
 elif st.session_state.step == 4:
-    address_verification_page()
+    business_gosi_page()
+# elif st.session_state.step == 5:
+#     consumer_gosi_page()
 elif st.session_state.step == 5:
-    sentiment_scrape()
+    idv_page()
 elif st.session_state.step == 6:
-    thm_verification()
+    expense_benchmarking_page()
 elif st.session_state.step == 7:
+    similar_web_page()
+elif st.session_state.step == 8:
+    address_verification_page()
+elif st.session_state.step ==9:
+    sentiment_scrape()
+elif st.session_state.step == 10:
+    thm_verification()
+elif st.session_state.step == 11:
     world_check()
+# elif st.session_state.step == 15:
+#     admin_dash()
