@@ -13,7 +13,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime
 import plotly.graph_objects as go
-from constants import THM_RESPONSE, GDRIVE_CREDS, SCOPE, CONTRACT_JSON_DATA
+from constants import THM_RESPONSE, GDRIVE_CREDS, SCOPE
 import subprocess
 import json
 import pandas as pd
@@ -26,17 +26,15 @@ from bs4 import BeautifulSoup
 import time
 from id_upload import extract_id_details
 from vat_zakat_page import extract_vat_zakat_details
-from gosi_extraction import extract_business_gosi_data, extract_consumer_gosi_data
-from admin_dash_merged import admin_dash
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from BanksExtractor import *
 import random
+from admin_dash import admin_dash
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 import tempfile
-import mimetypes
 from common import set_custom_css
 # import numpy as np
 
@@ -56,14 +54,14 @@ if 'admin_step' not in st.session_state:
 def check_credentials(username, password):
     return username == USERNAME and password == PASSWORD
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "vision_creds.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "streamlit-connection-b1a38b694505 (1).json"
 
 def extract_text_from_pdf(pdf_file):
     client = vision.ImageAnnotatorClient()
 
     try:
         # Read the PDF file
-        pdf_content = pdf_file.read()
+        pdf_content = pdf_file.read()   
 
         # Convert the PDF to a valid image format (e.g., PNG)
         pdf_document = fitz.open(stream=io.BytesIO(pdf_content))
@@ -272,10 +270,9 @@ def eastern_arabic_to_english(eastern_numeral):
     return english_numeral
 
 def gcloud_translate(text, src='ar', dest='en'):
-    translate_client = translate.Client.from_service_account_json('translate_creds.json')
+    translate_client = translate.Client()
     result = translate_client.translate(text, source_language=src, target_language=dest)
     return result['translatedText']
-
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
@@ -284,7 +281,6 @@ header{visibility:hidden;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
 def check_admin_credentials(username, password):
     if username == "admin" and password == "admin":
         return True
@@ -306,6 +302,33 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+def check_credentials(username, password):
+    # Add your credential validation logic here
+    # Return True if credentials are valid, otherwise return False
+    return username == "alraedah" and password == "ekyb-sandbox"
+# def logout_button(username,password):
+#     if   check_credentials(username, password):
+#             print('this is username and password',username,password)
+#             st.session_state.is_logged_in = True
+#             Logout= st.button("Logout")
+#             if Logout:
+#                 print('before logout',st.session_state.is_logged_in)
+#                 st.session_state.is_logged_in=False
+#                 print('after logout',st.session_state.is_logged_in)
+#                 username,password=[],[]
+#                 st.session_state.is_logged_in=False
+#                 print('this is logged in true',st.session_state.is_logged_in)
+#                 print(username,password)
+#                 print('this is st.session step before logout',st.session_state.step)
+#                 st.session_state.step = 0
+#                 st.session_state.cr_entry_page=False
+#                 print('Cr entry page hidden',st.session_state.cr_entry_page)
+#                 st.session_state.login_page=True
+#                 print('this is st.session after logout',st.session_state.step)
+#                 st.empty()
+#                 login_page()
+#                 pass
+
 
 def login_page():
     set_custom_css()
@@ -341,26 +364,38 @@ def login_page():
     placeholder = st.empty()
    # Create a custom container for the login form with a background image
    
-    st.markdown(
-    """
-    <div class="login" style="background-image: url('ekyb_background-image.jpg'); background-size: cover; background-attachment: fixed;">
-        <div style="padding: 20px;">
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)  
+#     st.markdown(
+#     """
+#     <div class="login" style="background-image: url('ekyb_background-image.jpg'); background-size: cover; background-attachment: fixed;">
+#         <div style="padding: 20px;">
+#         </div>
+#     </div>
+#     """,
+#     unsafe_allow_html=True,
+# )   
+    
+    #     # Add a session state variable for login state
+    # if 'is_logged_in' not in st.session_state:
+    #     st.session_state.is_logged_in = False
+
+    # # Add a logout button at the top-right of the page if the user is logged in
+    # if st.session_state.is_logged_in:
+    #     if st.button("Logout", key='logout_button'):
+    #         # Reset the login state when the user logs out
+    #         st.session_state.is_logged_in = False
+
     tab1, tab2 = st.tabs(["User Login", "Admin Login"])
     # active_tab = st.radio("Select an option", tabs)
     with tab1:
         placeholder = st.empty()
         with placeholder.form("login"):
-            st.markdown('<h2 class="creds">Enter your Credentials</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 class="creds">Enter your credentials</h2>', unsafe_allow_html=True)
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
             submit = st.form_submit_button("Login")
 
         if submit and check_credentials(username, password):
+            st.session_state.is_logged_in = True
             st.success("Login successful! Proceed to the CR verification screen.")
             st.session_state.step = 1
             st.session_state.login_page = True
@@ -370,7 +405,7 @@ def login_page():
     with tab2:
         admin_placeholder = st.empty()
         with admin_placeholder.form("admin_login"):
-            st.markdown('<h2 class="creds">Enter Admin Credentials</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 class="creds">Enter your credentials</h2>', unsafe_allow_html=True)
             admin_username = st.text_input("Username")
             admin_password = st.text_input("Password", type="password")
             submit = st.form_submit_button("Login")
@@ -403,22 +438,68 @@ def login_page():
 #     elif submit and not check_credentials(username, password):
 #         st.error("Login failed. Please check your credentials.")
 
-steps = ["", "CR verification", "Contract Issuing", "VAT/Zakat", "Gosi", "ID Verification", "Expense Analysis", "Web Analysis", "Address verification", "Social Checks ", "Fraud Analysis", "PEP & AML"]
+steps = ["", "CR verification", "VAT/Zakat", "ID Verification", "Expense Analysis", "Web Analysis", "Address verification", "Social Checks ", "Fraud Analysis", "AML/PEP/Sanctions"]
 
 def show_progress():
-    progress_html = "<div style='display: flex; justify-content: space-between; align-items: center; width: 100%;'>"
+    progress_html = "<div style='display: flex; justify-content: space-between; align-items: left; width: 100%;'>"
+    
+    # Define the CSS media query to hide steps on small screens
+    hide_on_small_screen = """
+        @media (max-width: 768px) {
+            .step {
+                display: none;
+            }
+        }
+    """
+
+    progress_html += f"<style>{hide_on_small_screen}</style>"
+
     for i, step in enumerate(steps):
-        checkpoint_style = "background-color: rgba(0,255,0,0.6); font-size: 12px;" if i <= st.session_state.step else ""
-        progress_html += (
-            "<div style='flex: 1; text-align: center; color: #555555; font-size: 13.5px; padding: 5px;'>"
-            f"{step}</div><div style='width: 12px; height: 12px; background-color: #aaaaaa; border-radius: 50%; {checkpoint_style}'></div>"
-        )
+        checkpoint_style = "background-color: rgba(0, 255, 0, 0.6); font-size: 12px;" if i <= st.session_state.step else ""
+        if i > 0:
+            progress_html += (
+                f"<div class='step' style='flex: 1; text-align: center; color: #555555; font-size: 13.5px; padding: 5px;'>{step}</div>"
+                f"<div style='width: 12px; height: 12px; background-color: #aaaaaa; border-radius: 50%; {checkpoint_style}'></div>"
+            )
+        else:
+            progress_html += f"<div style='flex: 1; text-align: center; align:left color: #555555; font-size: 13.5px; padding: 5px;'>{step}</div>"
+    
     progress_html += "</div>"
     st.markdown(progress_html, unsafe_allow_html=True)
+
+# # Add custom CSS to your Streamlit app
+# custom_css = """
+# <style>
+# .progress-container {
+#     display: flex;
+#     justify-content: space-between;
+#     align-items: center;
+#     width: 100%;
+#     padding: 5px;
+#     font-size: 13.5px;
+# }
+
+# .progress-step {
+#     flex: 1;
+#     text-align: center;
+#     color: #555555;
+#     padding: 5px;
+# }
+
+# @media screen and (max-width: 768px) {
+#     .progress-container {
+#         font-size: 12px;
+#     }
+# }
+# </style>
+# """
+# st.markdown(custom_css, unsafe_allow_html=True)
+# show_progress()
 
 # Function to display a progress bar
 def show_progress_bar():
     progress_value = st.session_state.step / (len(steps) - 1)  # Start from 0 and go to 1
+    print(progress_value)
     st.progress(progress_value)
 
 def get_response_from_wathq(cr_number):
@@ -504,25 +585,17 @@ def verify_business_details(ocr_result, wathq_result):
     print(f"Flag: {flag}")
     return flag
 
-def upload_to_drive(data, file_name):
+def upload_to_drive(file):
     credentials = Credentials.from_service_account_file('gdrive_creds.json')  # Replace with your JSON credentials
     drive_service = build('drive', 'v3', credentials=credentials)
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(data)
+        temp_file.write(file.read())
         temp_file_path = temp_file.name
 
-    # r_no = random.randint(10**9, 10**10 - 1)
-
     file_metadata = {
-        'name': file_name
+        'name': file.name
         }  # Replace with your folder ID
-    
-    mime_type, _ = mimetypes.guess_type(file_name)
-    if mime_type is None:
-        mime_type = 'application/octet-stream'
-    print(f"mime type: {mime_type}")
-
-    media = MediaFileUpload(temp_file_path, mimetype=mime_type)
+    media = MediaFileUpload(temp_file_path, mimetype=file.type)
     file = drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
 
     drive_service.permissions().create(
@@ -541,20 +614,70 @@ def cr_entry_page():
     show_progress_bar()
     show_progress()
     set_custom_css()
+    # logout_button(USERNAME,PASSWORD)
+    
+        # Define the list of steps
+    steps = [
+        "Start",
+        "CR verification",
+        "VAT/Zakat",
+        "ID Verification",
+        "Expense Analysis",
+        "Web Analysis",
+        "Address verification",
+        "Social Checks",
+        "Fraud Analysis",
+        "AML/PEP/Sanctions"
+    ]
+    # Create a sidebar for step selection
+    with st.sidebar:
+        st.markdown("<h2 style='text-align: center; font-weight: bold; font-size:20px'>Jump to a step</h2>", unsafe_allow_html=True)
+        selected_step = st.selectbox("Select Step to Jump To", steps)
+
+    # Create a dictionary to map selected step to the corresponding function
+    step_functions = {
+        "CR verification": cr_entry_page,
+        "VAT/Zakat": vat_zakat_page,
+        "ID Verification":idv_page,
+         "Expense Analysis":expense_benchmarking_page,
+        "Web Analysis":similar_web_page,
+        "Address verification":address_verification_page,
+        "Social Checks":sentiment_scrape,
+        "Fraud Analysis":thm_verification,
+        "AML/PEP/Sanctions":world_check
+        # Add more step-function mappings here
+    }
+
+    # Display the content of the selected step by calling the corresponding function
+    if selected_step in step_functions:
+        step_functions[selected_step]()
+        st.session_state.step += 1
+    # Add a button for returning to the top
+    if st.sidebar.button("Return to Top"):
+        selected_step = "Start"
+
+    # if st.button('Logout'):
+    #             login_page()
     st.markdown('<h1 class="title">C/R - Verification</h1>',unsafe_allow_html=True)
     pdf_file = st.file_uploader("Upload a C/R Document(PDF only)", type=["pdf"])
     submit_button = st.button("Submit")
-
     if submit_button:
         if not pdf_file:
             st.error("Please upload a PDF document before submitting.")
         else:
             with st.spinner("Fetching data..."): 
+                # uploaded_pdf_content = pdf_file
+                # file_id = upload_to_drive(pdf_file)
+                # pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                # st.session_state['gsheet_data']['CR_PDF'] = pdf_file_url
+
                 business_details_container = st.empty()
                 pdf_text = extract_text_from_pdf(pdf_file)
+                # st.write(pdf_text)
                 translated_pdf_text1 = translate_arabic_to_english(pdf_text)
                 translated_pdf_text2 = gcloud_translate(pdf_text)
                 # st.write(translated_pdf_text2)
+
                 ocr_result = smart_ocr_on_cr_doc(translated_pdf_text1, translated_pdf_text2)
                 st.session_state['gsheet_data']['CR_DATA'] = json.dumps(ocr_result)
                 cr_number = ocr_result.get('cr_number')
@@ -569,11 +692,6 @@ def cr_entry_page():
             if empty_string_keys:
                 st.error("Please upload a Valid CR Document PDF")
             else:
-                uploaded_pdf_content = pdf_file.read()
-                file_name = pdf_file.name
-                file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                st.session_state['gsheet_data']['CR_PDF'] = pdf_file_url
 
                 matches = re.findall(r'\w+\s+\w+', business_owner_1)
                 if len(matches) >= 2:
@@ -584,7 +702,6 @@ def cr_entry_page():
                     business_owner_name = business_owner_1
                 
                 st.session_state.owner_name = business_owner_name
-                st.session_state.cr_number = cr_number
 
                 # Clear the previous business details
                 business_details_container.empty()
@@ -621,11 +738,11 @@ def cr_entry_page():
                             st.success(f"Business Owner: {business_owner_name} ✅")
                             if expiry_date_hijri:
                                 st.success(f"CR Expiry Date: {expiry_date_hijri} ✅")
-                            elif wathq_result.get('cr_expiry_date'):
+                            else:
                                 st.success(f"CR Expiry Date: {wathq_result['cr_expiry_date']} ✅")
                             if location:
                                 st.success(f"Business Address: {location} ✅")
-                            elif wathq_result.get('address'):
+                            else:
                                 st.success(f"Business Address: {wathq_result['address']} ✅")
 
                             st.session_state.next_button_enabled = True
@@ -646,15 +763,15 @@ def cr_entry_page():
                         st.success(f"Business Owner: {business_owner_name} ✅")
                         if expiry_date_hijri:
                             st.success(f"CR Expiry Date: {expiry_date_hijri} ✅")
-                        elif wathq_result.get('cr_expiry_date'):
+                        else:
                             st.success(f"CR Expiry Date: {wathq_result['cr_expiry_date']} ✅")
                         if location:
                             st.success(f"Business Address: {location} ✅")
-                        elif wathq_result.get('address'):
-                            st.success(f"Business Address: {wathq_result['address']} ✅")
+                        else:
+                            st.success(f"Business Address: {location} ✅")
                         
                         st.session_state.next_button_enabled = True
-                        st.session_state.next_page = "wathq_contract"
+                        st.session_state.next_page = "vat_page"
 
                         st.session_state.next_button_enabled = True
                         st.session_state.step += 1
@@ -664,87 +781,11 @@ def cr_entry_page():
                     print(f"step: {st.session_state.step}")
             # st.session_state.next_page = "similar_web_page"
 
-def generate_wathq_contract_data(complete_data):
-    filled_data = json.loads(CONTRACT_JSON_DATA)
-    import random
-    # Mapping contract data
-    filled_data["contract"]["basicInfo"]["contractNumber"] = str(random.randint(10**9, 10**10 - 1))
-    filled_data["contract"]["basicInfo"]["contractCopyNumber"] = str(random.randint(10**9, 10**10 - 1))
-    filled_data["contract"]["basicInfo"]["establishmentDate"] = complete_data["company"]["startDate"]  # Mapping establishmentDate from company startDate
-    filled_data["contract"]["basicInfo"]["companyAddress"] = complete_data["address"]["general"]["address"]
-    filled_data["contract"]["crInfo"]["crNo"] = str(complete_data["crNumber"])
-    filled_data["contract"]["crInfo"]["companyFullName"] = complete_data["crName"]
-    filled_data["contract"]["companyForm"]["companyFormDescriptionAr"] = complete_data["businessType"]["name"]
-    filled_data["contract"]["activities"][0]["activityDescriptionAr"] = complete_data["activities"]["isic"][0]["name"]
-
-    # Mapping company capital data
-    filled_data["contract"]["companyCapital"]["capital"] = complete_data["capital"]["paidAmount"]
-    filled_data["contract"]["companyCapital"]["cashCapital"] = complete_data["capital"]["paidAmount"]
-    filled_data["contract"]["companyCapital"]["totalCashContribution"] = complete_data["capital"]["paidAmount"]
-    filled_data["contract"]["companyCapital"]["contributionValue"] = complete_data["capital"]["share"]["sharesCount"]
-
-    # Mapping partners data
-    # for i, partner in enumerate(complete_data["parties"]):
-    # print(f"i val: {i}")
-    partner = complete_data["parties"][1]
-    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"] = {}
-    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["identifierNo"] = partner["identity"]["id"]
-    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["birthDate"] = partner.get("birthDate")
-    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["firstNameAr"] = partner["name"]
-    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["genderDescriptionAr"] = partner["relation"]["name"]
-    filled_data["partners"]["individualsPartners"][0]["partnerBasicInfo"]["nationalityDescriptionAr"] = partner["nationality"]["name"]
-
-    # Mapping managers data
-    # for i, manager in enumerate(complete_data["parties"]):
-    # if manager["relation"]["name"] == "مدير":
-    filled_data["managers"][0]["managerBasicInfo"]["identifierNo"] = partner["identity"]["id"]
-    filled_data["managers"][0]["managerBasicInfo"]["birthDate"] = partner.get("birthDate")
-    filled_data["managers"][0]["managerBasicInfo"]["firstNameAr"] = partner["name"]
-    filled_data["managers"][0]["managerBasicInfo"]["genderDescriptionAr"] = partner["relation"]["name"]
-    filled_data["managers"][0]["managerBasicInfo"]["nationalityDescriptionAr"] = partner["nationality"]["name"]
-
-    # Convert the filled data back to JSON
-    filled_json_result = json.dumps(filled_data, indent=4, ensure_ascii=False)
-
-    # Printing the filled JSON
-    print(filled_json_result)
-
-    return filled_json_result
-
-def wathq_contract_issuing():
-    show_progress_bar()
-    show_progress()
-    set_custom_css()
-    st.markdown('<h1 class="title">Contract Issuing - Wathq</h1>',unsafe_allow_html=True)
-    cr_number = st.session_state.get('cr_number')
-    cr_number = st.text_input("CR Number", cr_number)
-    submit_button = st.button("Get Results")
-    
-    if submit_button:
-        with st.spinner(f"Fetching data for {cr_number} ..."):
-            time.sleep(2)
-            wathq_data = st.session_state['gsheet_data'].get('CR_DATA_WATHQ')
-            wathq_data = json.loads(wathq_data)
-            wathq_contract_data = generate_wathq_contract_data(wathq_data)
-
-            with st.expander("Wathq Contract Verification"):
-                st.json(wathq_contract_data)
-        
-                st.session_state.next_button_enabled = True
-                st.session_state.next_page = "vat_page"
-
-                st.session_state.next_button_enabled = True
-                st.session_state.step += 1
-
-            if st.session_state.get("next_button_enabled"):
-                if st.button("Next"):
-                    print(f"step: {st.session_state.step}")
-
 def vat_zakat_page():
     show_progress_bar()
     show_progress()
     set_custom_css()
-    st.markdown('<h1 class="title">Zakat/VAT - Verification</h1>',unsafe_allow_html=True)
+    st.title("Zakat/VAT - Verification")
     pdf_file = st.file_uploader("Upload a VAT/Zakat Document(PDF only)", type=["pdf"])
     submit_button = st.button("Submit")
 
@@ -752,133 +793,17 @@ def vat_zakat_page():
         if not pdf_file:
             st.error("Please upload a PDF document before submitting.")
         else:
-            with st.spinner("Reading ZAKAT/VAT Document..."):
+            with st.spinner("Fetching data..."):
+                # uploaded_pdf_content = pdf_file.read()
+                # file_id = upload_to_drive(uploaded_pdf_content)
+                # pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                # st.session_state['gsheet_data']['VAT_PDF'] = pdf_file_url
+
                 pdf_text = extract_text_from_pdf(pdf_file)
                 ocr_result = extract_vat_zakat_details(pdf_text)
                 st.session_state['gsheet_data']['VAT_Data'] = json.dumps(ocr_result)
-
-                uploaded_pdf_content = pdf_file.read()
-                file_name = pdf_file.name  # Get the file name
-                file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                st.session_state['gsheet_data']['VAT_PDF'] = pdf_file_url
-
                 print(f"\n\n2nd: {st.session_state['gsheet_data']}")
-
                 with st.expander("Extracted Details from Zakat/VAT"):
-                    df = pd.DataFrame([ocr_result])
-                    st.write(df)
-                
-                st.session_state.next_button_enabled = True
-                st.session_state.next_page = "gosi_page"
-
-                st.session_state.next_button_enabled = True
-                st.session_state.step += 1
-
-            if st.session_state.get("next_button_enabled"):
-                if st.button("Next"):
-                    print(f"step: {st.session_state.step}")
-
-def business_gosi_page():
-    show_progress_bar()
-    show_progress()
-    set_custom_css()
-    st.markdown('<h1 class="title">GOSI Data Verification</h1>',unsafe_allow_html=True)
-    gosi_type = st.selectbox("Select GOSI Type", ("Business GOSI", "Customer/Personal GOSI"))
-
-    if gosi_type == "Business GOSI":
-        pdf_file = st.file_uploader("Upload Business GOSI Document(PDF only)", type=["pdf"])
-        submit_button = st.button("Submit")
-
-        if submit_button:
-            if not pdf_file:
-                st.error("Please upload a PDF document before submitting.")
-            else:
-                with st.spinner("Reading GOSI Document..."):
-                    pdf_text = extract_text_from_pdf(pdf_file)
-                    ocr_result = extract_business_gosi_data(pdf_text)
-                    st.session_state['gsheet_data']['BUSINESS_GOSI_Data'] = json.dumps(ocr_result)
-
-                    uploaded_pdf_content = pdf_file.read()
-                    file_name = pdf_file.name  # Get the file name
-                    file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                    pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                    st.session_state['gsheet_data']['BUSINESS_GOSI_PDF'] = pdf_file_url
-
-                    print(f"\n\n3rd: {st.session_state['gsheet_data']}")
-
-                    with st.expander("Extracted Details from GOSI Document"):
-                        df = pd.DataFrame([ocr_result])
-                        st.write(df)
-                    
-                    st.session_state.next_button_enabled = True
-                    st.session_state.next_page = "consumer_gosi"
-
-                    st.session_state.next_button_enabled = True
-                    st.session_state.step += 1
-
-                if st.session_state.get("next_button_enabled"):
-                    if st.button("Next"):
-                        print(f"step: {st.session_state.step}")
-
-        elif gosi_type == "Customer/Personal GOSI":
-            pdf_file = st.file_uploader("Upload Customer's GOSI Document(PDF only)", type=["pdf"])
-            submit_button = st.button("Submit")
-
-            if submit_button:
-                if not pdf_file:
-                    st.error("Please upload a PDF document before submitting.")
-                else:
-                    with st.spinner("Reading GOSI Document..."):
-                        pdf_text = extract_text_from_pdf(pdf_file)
-                        ocr_result = extract_consumer_gosi_data(pdf_text)
-                        st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
-
-                        uploaded_pdf_content = pdf_file.read()
-                        file_name = pdf_file.name  # Get the file name
-                        file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                        pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                        st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
-
-                        print(f"\n\n3rd: {st.session_state['gsheet_data']}")
-                        with st.expander("Extracted Details from GOSI Document"):
-                            df = pd.DataFrame([ocr_result])
-                            st.write(df)
-                        
-                        st.session_state.next_button_enabled = True
-                        st.session_state.next_page = "idv_page"
-
-                        st.session_state.next_button_enabled = True
-                        st.session_state.step += 1
-
-                    if st.session_state.get("next_button_enabled"):
-                        if st.button("Next"):
-                            print(f"step: {st.session_state.step}")
-
-def consumer_gosi_page():
-    # show_progress_bar()
-    # show_progress()
-    # st.title("Customer/Personal GOSI")
-    pdf_file = st.file_uploader("Upload Customer's GOSI Document(PDF only)", type=["pdf"])
-    submit_button = st.button("Submit")
-
-    if submit_button:
-        if not pdf_file:
-            st.error("Please upload a PDF document before submitting.")
-        else:
-            with st.spinner("Reading GOSI Document..."):
-                pdf_text = extract_text_from_pdf(pdf_file)
-                ocr_result = extract_consumer_gosi_data(pdf_text)
-                st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
-
-                uploaded_pdf_content = pdf_file.read()
-                file_name = pdf_file.name  # Get the file name
-                file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
-
-                print(f"\n\n2nd: {st.session_state['gsheet_data']}")
-                with st.expander("Extracted Details from GOSI Document"):
                     df = pd.DataFrame([ocr_result])
                     st.write(df)
                 
@@ -891,6 +816,7 @@ def consumer_gosi_page():
             if st.session_state.get("next_button_enabled"):
                 if st.button("Next"):
                     print(f"step: {st.session_state.step}")
+
 
 def display_details_in_table(details, id_number):
     df = pd.DataFrame(details, index=[f"ID{id_number}"])
@@ -913,15 +839,13 @@ def idv_page():
 
         if uploaded_id:
             uploaded_id_content = uploaded_id.read()
+            # file_id = upload_to_drive(uploaded_id_content)
+            # file_url = f"https://drive.google.com/uc?id={file_id}"
+            # image_id_urls.append(file_url)
 
             with st.spinner("Fetching data..."):
                 extracted_details = extract_id_details(uploaded_id_content)
                 uploaded_ids.append(extracted_details)
-
-            file_name = uploaded_id.name  # Get the file name
-            file_id = upload_to_drive(uploaded_id_content, file_name)
-            file_url = f"https://drive.google.com/uc?id={file_id}"
-            image_id_urls.append(file_url)
 
     if hasattr(st.session_state, 'owner_name'):
         matching_name = st.session_state.owner_name
@@ -988,12 +912,6 @@ def expense_benchmarking_page():
                 if not data:
                     st.error("We do not support this bank statement format yet.")
                 else:
-                    uploaded_pdf_content = uploaded_file.read()
-                    file_name = uploaded_file.name  # Get the file name
-                    file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                    pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                    st.session_state['gsheet_data']['BANK_STATEMENT'] = pdf_file_url
-
                     with st.spinner("Analyzing Results..."):
                         
                         months = []
@@ -1042,14 +960,28 @@ def expense_benchmarking_page():
                         # Filter out rows with missing data
                         data = data.dropna()
                         
-                
                         with st.expander("View Month-wise Results"):
                             html_table = data.to_html(index=False, header=True)
                             st.markdown(f'<style>table {{ width: 100%; margin-bottom: 10px; }}</style>', unsafe_allow_html=True)
                             st.markdown(html_table, unsafe_allow_html=True)
-                            # st.write(data)
 
-                        hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
+                            hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
+
+                            # Set a shorter title for smaller devices
+                            title_for_small_device = "Monthly Analysis"  # Adjust this as needed
+
+                            # HTML code for the title with a media query
+                            title_html = f'''
+                            <style>
+                                @media (max-width: 768px) {{
+                                    .title-text {{
+                                        font-size: 16px !important;
+                                    }}
+                                }}
+                            </style>
+                            <div class="title-text">{title_for_small_device}</div>
+                            '''
+                            st.markdown(title_html, unsafe_allow_html=True)
 
                         fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Free Cash Flow'],
                             title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
@@ -1294,6 +1226,14 @@ def generate_fake_similar_web_data(WEB_ANALYSIS_DATA, WEB_AVERAGE_DURATION_DATA)
             # height=700,
             # margin=dict(l=350),
         )
+         # Apply custom CSS for centering the chart and making it responsive
+        # chart_html = f'''
+        #     <div style="margin: 0 auto; max-width: 100%; text-align: center;">
+        #         {fig1.to_html()}
+        #     </div>
+        #     '''
+        # st.markdown(chart_html, unsafe_allow_html=True)
+         # Use use_container_width=True for automatic width adjustment
         fig1.update_traces(marker_color='rgba(102,51,153,0.5)')
         st.plotly_chart(fig1, use_container_width=True, use_container_height=True)
         #  # Use use_container_width=True for automatic width and height adjustment
@@ -1683,25 +1623,47 @@ def thm_verification():
         if st.button("Get Analysis"):
             col1, col2 = st.columns(2)
             with col1:
-                st.subheader("Device Fingerprint")
-                st.write("Device ID:", THM_RESPONSE["device_fingerprint"]["device_id"])  # Display the device ID
+                st.markdown("<p style='text-align: center; font-weight: bold; color: #000000; font-size:25px;'>Device Fingerprint</p>", unsafe_allow_html=True)
+                # Display "Device ID" in bold and center-aligned
+                st.markdown(
+                f"<p style='text-align: center; font-weight: bold;'>Device ID:</p> <p style='text-align:center;'{THM_RESPONSE['device_fingerprint']['device_id']}</p>",
+                unsafe_allow_html=True
+                )
                 st.write("")
                 st.write("")
             
             with col2:
-                st.subheader("Identity Verification")
-                st.write("User Behavior Match:", THM_RESPONSE["identity_verification"]["user_behavior_match"])
-                st.write("Identity Verified:", THM_RESPONSE["identity_verification"]["identity_verified"])
+                st.markdown("<p style='text-align: center; font-weight: bold; color: #000000; font-size:25px;'>Identity Verification</p>", unsafe_allow_html=True)
+                st.markdown(
+                f"<p style='text-align: center; font-weight: bold;'>User Behavior Match:</p> <p style='text-align:center;'> {THM_RESPONSE['identity_verification']['user_behavior_match']}</p>",
+                unsafe_allow_html=True
+                )
+                st.markdown(
+                f"<p style='text-align: center; font-weight: bold;'>Identity Verified:</p> <p style='text-align:center;'> {THM_RESPONSE['identity_verification']['identity_verified']}</p>",
+                unsafe_allow_html=True
+                )
 
             with col1:
-                st.subheader("Geolocation")
-                st.write("Country:", THM_RESPONSE["geolocation"]["country"])
-                st.write("Latitude:", THM_RESPONSE["geolocation"]["latitude"])
-                st.write("Longitude:", THM_RESPONSE["geolocation"]["longitude"])
+                st.markdown("<p style='text-align: center; font-weight: bold; color: #000000; font-size:25px;'>Geolocation</p>", unsafe_allow_html=True)
+                st.markdown(
+                "<p style='text-align: center; font-weight: bold;'>Country:</p>" f"<p style='text-align:center;'>{THM_RESPONSE['geolocation']['country']}</p>",
+                unsafe_allow_html=True
+                )
+                st.markdown(
+                f"<p style='text-align: center; font-weight: bold;'>Latitude:</p> <p style='text-align:center;'>{THM_RESPONSE['geolocation']['latitude']}</p>",
+                unsafe_allow_html=True
+                )
+                st.markdown(
+                f"<p style='text-align: center; font-weight: bold;'>Longitude:</p> <p style='text-align:center;'> {THM_RESPONSE['geolocation']['longitude']}</p>",
+                unsafe_allow_html=True
+                )
 
             with col2:
-                st.subheader("Bot Detection")
-                st.write("Is Bot:", THM_RESPONSE["bot_detection"]["is_bot"])
+                st.markdown("<p style='text-align: center; font-weight: bold; color: #000000; font-size:25px;'>Bot Detection</p>", unsafe_allow_html=True)
+                st.markdown(
+                f"<p style='text-align: center; font-weight: bold;'>Is Bot:</p> <p style='text-align:center;'> {THM_RESPONSE['bot_detection']['is_bot']}</p>",
+                unsafe_allow_html=True
+                )
 
             st.session_state.next_button_enabled = True
             st.session_state.step += 1
@@ -1744,9 +1706,12 @@ def world_check():
             for _ in range(3):
                 st.markdown('<p style="font-size:24px; padding-top:16px">✅</p>', unsafe_allow_html=True)
 
+# def admin_dashboard():
+#     st.title("Admin Dashboard")
+
 if st.session_state.admin_step == 1:
     st.session_state.login_page = True
-    st.session_state.step=15
+    st.session_state.step=10
     admin_dash()
 
 if 'login_page' not in st.session_state:
@@ -1754,26 +1719,20 @@ if 'login_page' not in st.session_state:
 elif st.session_state.step == 1:
     cr_entry_page()
 elif st.session_state.step == 2:
-    wathq_contract_issuing()
-elif st.session_state.step == 3:
     vat_zakat_page()
-elif st.session_state.step == 4:
-    business_gosi_page()
-# elif st.session_state.step == 5:
-#     consumer_gosi_page()
-elif st.session_state.step == 5:
+elif st.session_state.step == 3:
     idv_page()
-elif st.session_state.step == 6:
+elif st.session_state.step == 4:
     expense_benchmarking_page()
-elif st.session_state.step == 7:
+elif st.session_state.step == 5:
     similar_web_page()
-elif st.session_state.step == 8:
+elif st.session_state.step == 6:
     address_verification_page()
-elif st.session_state.step ==9:
+elif st.session_state.step == 7:
     sentiment_scrape()
-elif st.session_state.step == 10:
+elif st.session_state.step == 8:
     thm_verification()
-elif st.session_state.step == 11:
+elif st.session_state.step == 9:
     world_check()
-# elif st.session_state.step == 15:
-#     admin_dash()
+# elif st.session_state.step == 10:
+#     admin_dashboard()
