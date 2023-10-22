@@ -11,6 +11,26 @@ def set_custom_css():
     margin-bottom: 20px; /* Add some spacing below the title */
  
 } 
+  .st-emotion-cache-16idsys p{
+  font-weight:bold;
+  font-size:14px;
+  }
+#   .st-emotion-cache-16idsys p:hover{
+#    color: #00FF00 !important;
+#   }
+  .st-cp{
+  color: #00FF00 !important;
+  }
+  .st-emotion-cache-5rimss p{
+  font-size:15px;
+#   font-weight:bold;
+#   text-align:center;
+#   align:center;
+  }
+  .st-emotion-cache-1y04v0k{
+  align:center;
+  text-align:center;
+  }
    .creds{
    color:white;
     font-weight:bold;
@@ -19,11 +39,24 @@ def set_custom_css():
     color:white;
     font-weight:bold;
     }
+    
+    # .st-emotion-cache-10trblm{
+    # align:center;
+    # text-align:center;
+    # }
+    # .modal-overlay{
+    # color:white;
+    # width:90%;
+    # height:90%;
+    # }
     .st-emotion-cache-1gulkj5{
     background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
     }
     .st-emotion-cache-r421ms{
     background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
+    }
+    .div:first-child{
+    overflow:auto;
     }
     # .st-emotion-cache-10trblm{
     #  color:white;
@@ -71,6 +104,27 @@ def set_custom_css():
     .stButton>button:hover {
         color: #00FF00 !important;
     }
+#     .st-emotion-cache-10oheav{
+#      background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
+#      height:100%;
+#      width:100%
+#    }
+#    .st-emotion-cache-10oheav h2{
+#    align:center;
+#    text-align:center;
+#    font-size:20px;
+#    color:white;
+#    font-weight:bold;
+#    }
+#    .st-emotion-cache-16idsys p{
+#    align:center;
+#    text-align:center;
+#    color:white;
+#    font-weight:bold;
+#    }
+#    .st-emotion-cache-fblp2m{
+#    color:white;
+#    }
     .stButton>button:active {
         color: #00FF00 !important;
     }
@@ -91,6 +145,39 @@ def set_custom_css():
     font-weight:bold;
     #  text-align:right;
     # align:right;
+    }
+    .st-emotion-cache-1y04v0k{
+     background: linear-gradient(to right, #ff00cc, #3333ff); /* Replace these colors with your desired gradient colors */
+    color: white; /* Set the text color to white or any color that contrasts well with the gradient */
+    align:center;
+    /* Add other styling as needed */
+    }
+    .st-em{
+    text-align:center;
+    align:center;
+    font-size:15px;
+    font-weight:bold;
+    }
+    .st-gf{
+    text-align:center;
+    align:center;
+    font-size:15px;
+    font-weight:bold;
+    }
+    .st-emotion-cache-16idsys p{
+    text-align:center;
+    font-weight:bold;
+    }
+    h3 {
+     color:#00FF00 !important;
+     text-align:center;
+    align:center;
+    font-weight:bold;
+    }
+    .sub-title{
+    text-align:center;
+    align:center;
+    font-weight:bold;
     }
     @media screen and (max-width: 768px) {{
         .st-emotion-cache-5rimss {{
@@ -115,6 +202,12 @@ def set_custom_css():
      font-size: 12px;
     }
     }
+    .st-emotion-cache-rj5w3t e1f1d6gn0{
+                width:90%;
+                height:80%;
+                top:70%;
+                left:70%;
+                }
     </style>
     """
     st.markdown(custom_css, unsafe_allow_html=True)
