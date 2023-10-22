@@ -127,3 +127,5 @@ pycountry
 hijri_converter
 rapidfuzz
 google-api-python-client
+streamlit-modal
+streamlit-aggrid
