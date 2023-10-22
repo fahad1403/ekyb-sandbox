@@ -427,7 +427,7 @@ def show_progress():
                 f"<div style='width: 12px; height: 12px; background-color: #aaaaaa; border-radius: 50%; {checkpoint_style}'></div>"
             )
         else:
-            progress_html += f"<div style='flex: 1; text-align: center; align:left color: #555555; font-size: 13.5px; padding: 5px;'>{step}</div>"
+            progress_html += f"<div style='flex: 1; text-align: center; align:left color: #555555; font-size: 13.5px; padding: 7px;'>{step}</div>"
     
     progress_html += "</div>"
     st.markdown(progress_html, unsafe_allow_html=True)
@@ -821,6 +821,9 @@ def business_gosi_page():
                     pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
                     st.session_state['gsheet_data']['BUSINESS_GOSI_PDF'] = pdf_file_url
 
+                    st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = ''
+                    st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = ''
+
                     print(f"\n\n3rd: {st.session_state['gsheet_data']}")
 
                     with st.expander("Extracted Details from GOSI Document"):
@@ -837,76 +840,42 @@ def business_gosi_page():
                     if st.button("Next"):
                         print(f"step: {st.session_state.step}")
 
-        elif gosi_type == "Customer/Personal GOSI":
-            pdf_file = st.file_uploader("Upload Customer's GOSI Document(PDF only)", type=["pdf"])
-            submit_button = st.button("Submit")
+    elif gosi_type == "Customer/Personal GOSI":
+        pdf_file = st.file_uploader("Upload Customer's GOSI Document(PDF only)", type=["pdf"])
+        submit_button = st.button("Submit")
 
-            if submit_button:
-                if not pdf_file:
-                    st.error("Please upload a PDF document before submitting.")
-                else:
-                    with st.spinner("Reading GOSI Document..."):
-                        pdf_text = extract_text_from_pdf(pdf_file)
-                        ocr_result = extract_consumer_gosi_data(pdf_text)
-                        st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
+        if submit_button:
+            if not pdf_file:
+                st.error("Please upload a PDF document before submitting.")
+            else:
+                with st.spinner("Reading GOSI Document..."):
+                    pdf_text = extract_text_from_pdf(pdf_file)
+                    ocr_result = extract_consumer_gosi_data(pdf_text)
+                    st.session_state['gsheet_data']['BUSINESS_GOSI_Data'] = ''
+                    st.session_state['gsheet_data']['BUSINESS_GOSI_PDF'] = ''
 
-                        uploaded_pdf_content = pdf_file.read()
-                        file_name = pdf_file.name  # Get the file name
-                        file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                        pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                        st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
+                    st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
 
-                        print(f"\n\n3rd: {st.session_state['gsheet_data']}")
-                        with st.expander("Extracted Details from GOSI Document"):
-                            df = pd.DataFrame([ocr_result])
-                            st.write(df)
-                        
-                        st.session_state.next_button_enabled = True
-                        st.session_state.next_page = "idv_page"
+                    uploaded_pdf_content = pdf_file.read()
+                    file_name = pdf_file.name  # Get the file name
+                    file_id = upload_to_drive(uploaded_pdf_content, file_name)
+                    pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                    st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
 
-                        st.session_state.next_button_enabled = True
-                        st.session_state.step += 1
+                    print(f"\n\n3rd: {st.session_state['gsheet_data']}")
+                    with st.expander("Extracted Details from GOSI Document"):
+                        df = pd.DataFrame([ocr_result])
+                        st.write(df)
+                    
+                    st.session_state.next_button_enabled = True
+                    st.session_state.next_page = "idv_page"
 
-                    if st.session_state.get("next_button_enabled"):
-                        if st.button("Next"):
-                            print(f"step: {st.session_state.step}")
+                    st.session_state.next_button_enabled = True
+                    st.session_state.step += 1
 
-def consumer_gosi_page():
-    # show_progress_bar()
-    # show_progress()
-    # st.title("Customer/Personal GOSI")
-    pdf_file = st.file_uploader("Upload Customer's GOSI Document(PDF only)", type=["pdf"])
-    submit_button = st.button("Submit")
-
-    if submit_button:
-        if not pdf_file:
-            st.error("Please upload a PDF document before submitting.")
-        else:
-            with st.spinner("Reading GOSI Document..."):
-                pdf_text = extract_text_from_pdf(pdf_file)
-                ocr_result = extract_consumer_gosi_data(pdf_text)
-                st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
-
-                uploaded_pdf_content = pdf_file.read()
-                file_name = pdf_file.name  # Get the file name
-                file_id = upload_to_drive(uploaded_pdf_content, file_name)
-                pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
-                st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
-
-                print(f"\n\n2nd: {st.session_state['gsheet_data']}")
-                with st.expander("Extracted Details from GOSI Document"):
-                    df = pd.DataFrame([ocr_result])
-                    st.write(df)
-                
-                st.session_state.next_button_enabled = True
-                st.session_state.next_page = "idv_page"
-
-                st.session_state.next_button_enabled = True
-                st.session_state.step += 1
-
-            if st.session_state.get("next_button_enabled"):
-                if st.button("Next"):
-                    print(f"step: {st.session_state.step}")
+                if st.session_state.get("next_button_enabled"):
+                    if st.button("Next"):
+                        print(f"step: {st.session_state.step}")
 
 def display_details_in_table(details, id_number):
     df = pd.DataFrame(details, index=[f"ID{id_number}"])
@@ -1576,15 +1545,16 @@ def sentiment_scrape():
             sentiments = {}
 
             tweet_list = twitter_scrape(company_name)
-            # ig_post_list = ['Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Explore NymCard’s Dubai office, a perfect reflection of their innovative and ambitious nature. The contemporary design promotes collaboration and creativity, while sustainable materials and natural light enhance well-being. Located in a prestigious location, this inspiring workspace embodies NymCard’s dedication to revolutionising the fintech industry. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "The new office of NymCard is a testament to the company's commitment to innovation and excellence. The workspace provides a practical and inspiring environment that encourages collaboration and productivity. Attention to detail is evident in every aspect, from the layout to the materials used. This office reflects NymCard’s values and vision, focusing on both functionality and aesthetics. Overall, it's a workspace that truly embodies the brand's identity. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice", 'Step into NymCard’s Dubai office, featuring distinct areas for meetings, collaboration, and focus. The modern crisp white open ceiling is complemented by retro cork cladding motifs and pastel stretched fabric panels that also serve as acoustic treatments. The space seamlessly blends aesthetics and functionality, providing an ideal workspace for the team. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', '@nymcard Acquires @spotiime To Offer BNPL-in-a-Box For Banks and Financial Institutions "NymCard, the leading payments infrastructure provider in the MENA region, has completed the acquisition of Spotii, a prominent Buy Now Pay Later (BNPL) Fintech operating in key markets including KSA, UAE, and Bahrain." #nymcard #spotii #bnpl #fintechs #financialservices #financialinclusion #bankingnews #bankingindustry #digitaltransformation #digitalpayment #servicesasabusiness #digitalplatform #dailynewspk #news', 'Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Dollar East Exchange Company (Private) Limited and United Bank Limited (UBL) recently signed a Memorandum of Understanding (MOU). Read more 🌐 : https://technologyplus.pk/2023/09/01/ubl-and-dollar-east-exchange-extend-their-strategic-partnership/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . UBL - United Bank Limited Dollar East Exchange Company #fintech #partnership #collaboration #reallife #transactional #growth #DigiKhata #KuudnaPakistan #Fintech #FintechNews #Visa #NymCard #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'The goal was to create a workspace that fosters creativity, productivity, and embodies the NymCard brand ethos. The result is a workspace featuring bespoke niches and curves that enhance collaboration and efficiency in designated activity zones. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "NymCard’s Dubai office: where innovation meets inspiration. The space reflects the brand's creative identity with pastel highlights, layered design, and distinct areas for various activities. It's the perfect workspace for one of the UAE's fastest-growing fintech companies to celebrate success. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice"]
             ig_post_list = instagram_scrape(str(company_name))
-            if company_name=='nymcard':
-                ig_post_list = ['Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Explore NymCard’s Dubai office, a perfect reflection of their innovative and ambitious nature. The contemporary design promotes collaboration and creativity, while sustainable materials and natural light enhance well-being. Located in a prestigious location, this inspiring workspace embodies NymCard’s dedication to revolutionising the fintech industry. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "The new office of NymCard is a testament to the company's commitment to innovation and excellence. The workspace provides a practical and inspiring environment that encourages collaboration and productivity. Attention to detail is evident in every aspect, from the layout to the materials used. This office reflects NymCard’s values and vision, focusing on both functionality and aesthetics. Overall, it's a workspace that truly embodies the brand's identity. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice", 'Step into NymCard’s Dubai office, featuring distinct areas for meetings, collaboration, and focus. The modern crisp white open ceiling is complemented by retro cork cladding motifs and pastel stretched fabric panels that also serve as acoustic treatments. The space seamlessly blends aesthetics and functionality, providing an ideal workspace for the team. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', '@nymcard Acquires @spotiime To Offer BNPL-in-a-Box For Banks and Financial Institutions "NymCard, the leading payments infrastructure provider in the MENA region, has completed the acquisition of Spotii, a prominent Buy Now Pay Later (BNPL) Fintech operating in key markets including KSA, UAE, and Bahrain." #nymcard #spotii #bnpl #fintechs #financialservices #financialinclusion #bankingnews #bankingindustry #digitaltransformation #digitalpayment #servicesasabusiness #digitalplatform #dailynewspk #news', 'Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Dollar East Exchange Company (Private) Limited and United Bank Limited (UBL) recently signed a Memorandum of Understanding (MOU). Read more 🌐 : https://technologyplus.pk/2023/09/01/ubl-and-dollar-east-exchange-extend-their-strategic-partnership/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . UBL - United Bank Limited Dollar East Exchange Company #fintech #partnership #collaboration #reallife #transactional #growth #DigiKhata #KuudnaPakistan #Fintech #FintechNews #Visa #NymCard #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'The goal was to create a workspace that fosters creativity, productivity, and embodies the NymCard brand ethos. The result is a workspace featuring bespoke niches and curves that enhance collaboration and efficiency in designated activity zones. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "NymCard’s Dubai office: where innovation meets inspiration. The space reflects the brand's creative identity with pastel highlights, layered design, and distinct areas for various activities. It's the perfect workspace for one of the UAE's fastest-growing fintech companies to celebrate success. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice"]
-                tweet_list = ['NymCard joins Visa’s Ready To Launch program https://t.co/HTzaaIAbZE \n@Visa \n#pakistanbanks\n#creditcardsinpakistan', '#Dubai @Visa @VisaNews #digitalpayments #Visa #VisaReadyToLaunch #VRTL #fintech #NymCard #seamless #payment @NymCard #bank @BCWGlobal \n\nhttps://t.co/Z0nR6WDL4U', "We're thrilled to announce that we're Golden Sponsors of Seamless KSA, coming up on the 4th - 5th of Sept! Come meet our team and discover how NymCard can help banks and financial institutions fast-track digital transformation.\n#SeamlessKSA #bankingasaservice #saudiarabia https://t.co/YDzimiH8Dw", 'We’re excited to announce @NymCard as Seamless Saudi Arabia Gold Sponsor \ud83c\udf89 \n\nFind them at stand D52 on 4 - 5 September on the #SeamlessKSA expo floor! Have you got your free expo ticket yet? \n\nRegister now and we’ll see you there: https://t.co/gxLbQestA8 https://t.co/fTVUl5ckLP', "\ud83e\udd16 We asked ChatGPT for the most imaginative use cases for Buy-Now-Pay-Later (BNPL) and here's what it revealed! \n\nLearn about NymCard's white-label BNPL: https://t.co/teGSEYQSrG\n\n#BNPL #FinancialInnovation #NymCard #FinancialFreedom #UAE52 #TodayForTomorrow #paymentsmadesimple https://t.co/AGJk36JC6o", 'BNPL Report: June 19 – China BNPL boom, retail #BNPL merchant tips, NymCard grabs Spotti, Sipay buys Sileon, credit reports, Klarna donations tool, Singapore regs, Affirm investment appeal? #fintech #banking https://t.co/cws8LZXwGV https://t.co/oscDDqv3WR']
-            if company_name=='alraedah':
-                tweet_list = ['#Alraedah #Finance signs an agreement with Saudi Kuwaiti Finance House https://t.co/sxaXrp7KaH https://t.co/UnOZmGZhWj', 'Alraedah Finance and Saudi Kuwaiti Finance House (SKFH) signed a strategic agreement to establish a closed-ended investment fund which aims to invest SAR 300 million to support SMEs\nhttps://t.co/9krf5YJMls\n@AlRaedahFinance \n#economy #intlbm #investment #products #sustainable https://t.co/Ya0mho8N2E', 'Alraedah Finance signs an agreement with Saudi Kuwaiti Finance House - ZAWYA https://t.co/NKQaoYmoLs', '#روضة_بداية_الرائدة \n#العودة_للدارسة \n#العودة_للدراسة https://t.co/ccrHY8myPX']
             google_reviews_list = google_reviews_scrape(company_name)
 
+            if str(company_name).lower()=='nymcard':
+                ig_post_list = ['Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Explore NymCard’s Dubai office, a perfect reflection of their innovative and ambitious nature. The contemporary design promotes collaboration and creativity, while sustainable materials and natural light enhance well-being. Located in a prestigious location, this inspiring workspace embodies NymCard’s dedication to revolutionising the fintech industry. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "The new office of NymCard is a testament to the company's commitment to innovation and excellence. The workspace provides a practical and inspiring environment that encourages collaboration and productivity. Attention to detail is evident in every aspect, from the layout to the materials used. This office reflects NymCard’s values and vision, focusing on both functionality and aesthetics. Overall, it's a workspace that truly embodies the brand's identity. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice", 'Step into NymCard’s Dubai office, featuring distinct areas for meetings, collaboration, and focus. The modern crisp white open ceiling is complemented by retro cork cladding motifs and pastel stretched fabric panels that also serve as acoustic treatments. The space seamlessly blends aesthetics and functionality, providing an ideal workspace for the team. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', '@nymcard Acquires @spotiime To Offer BNPL-in-a-Box For Banks and Financial Institutions "NymCard, the leading payments infrastructure provider in the MENA region, has completed the acquisition of Spotii, a prominent Buy Now Pay Later (BNPL) Fintech operating in key markets including KSA, UAE, and Bahrain." #nymcard #spotii #bnpl #fintechs #financialservices #financialinclusion #bankingnews #bankingindustry #digitaltransformation #digitalpayment #servicesasabusiness #digitalplatform #dailynewspk #news', 'Visa And NymCard Launch Plug & Play End-To-End Issuance Platform To Help #Fintech swiftly launch payment credentials as part of Visa’ Ready To Launch (VRTL) program Read more 🌐 : https://technologyplus.pk/2023/08/28/visa-and-nymcard-launch-plug-play-end-to-end-issuance-platform-to-help-fintech/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . Visa NymCard #Visa #NymCard Umar S. Khan Omar Onsi #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'Dollar East Exchange Company (Private) Limited and United Bank Limited (UBL) recently signed a Memorandum of Understanding (MOU). Read more 🌐 : https://technologyplus.pk/2023/09/01/ubl-and-dollar-east-exchange-extend-their-strategic-partnership/ Follow on FB 👍 : https://lnkd.in/diKN5pSG . . . . . . . . . . UBL - United Bank Limited Dollar East Exchange Company #fintech #partnership #collaboration #reallife #transactional #growth #DigiKhata #KuudnaPakistan #Fintech #FintechNews #Visa #NymCard #BusinessAdministration #education #educationalcontent #educationconsultant #petrol_price_in_Pakistan #today_petrol_rate_in_pakistan_2023 #diesel_price_in_Pakistan', 'The goal was to create a workspace that fosters creativity, productivity, and embodies the NymCard brand ethos. The result is a workspace featuring bespoke niches and curves that enhance collaboration and efficiency in designated activity zones. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice', "NymCard’s Dubai office: where innovation meets inspiration. The space reflects the brand's creative identity with pastel highlights, layered design, and distinct areas for various activities. It's the perfect workspace for one of the UAE's fastest-growing fintech companies to celebrate success. Photocredits: @chrisgoldstraw #JTCPLDesigns_HTSInteriors #OfficeDesigners #UAEArchitecture #UAEDesigners #Design #JTCPLDesigns #OfficeDesign #JTCPL_interiors #Modern #OfficeInteriors #WorkPlace #OfficeDecor #Minimal #Bespokelnteriors #InteriorDetails #InteriorForInspo #InteriorDesire #NymCard #ModernRetro #Finance #DubaiOffice"]
+                tweet_list = ['NymCard joins Visa’s Ready To Launch program https://t.co/HTzaaIAbZE \n@Visa \n#pakistanbanks\n#creditcardsinpakistan', '#Dubai @Visa @VisaNews #digitalpayments #Visa #VisaReadyToLaunch #VRTL #fintech #NymCard #seamless #payment @NymCard #bank @BCWGlobal \n\nhttps://t.co/Z0nR6WDL4U', "We're thrilled to announce that we're Golden Sponsors of Seamless KSA, coming up on the 4th - 5th of Sept! Come meet our team and discover how NymCard can help banks and financial institutions fast-track digital transformation.\n#SeamlessKSA #bankingasaservice #saudiarabia https://t.co/YDzimiH8Dw", 'We’re excited to announce @NymCard as Seamless Saudi Arabia Gold Sponsor \ud83c\udf89 \n\nFind them at stand D52 on 4 - 5 September on the #SeamlessKSA expo floor! Have you got your free expo ticket yet? \n\nRegister now and we’ll see you there: https://t.co/gxLbQestA8 https://t.co/fTVUl5ckLP', "\ud83e\udd16 We asked ChatGPT for the most imaginative use cases for Buy-Now-Pay-Later (BNPL) and here's what it revealed! \n\nLearn about NymCard's white-label BNPL: https://t.co/teGSEYQSrG\n\n#BNPL #FinancialInnovation #NymCard #FinancialFreedom #UAE52 #TodayForTomorrow #paymentsmadesimple https://t.co/AGJk36JC6o", 'BNPL Report: June 19 – China BNPL boom, retail #BNPL merchant tips, NymCard grabs Spotti, Sipay buys Sileon, credit reports, Klarna donations tool, Singapore regs, Affirm investment appeal? #fintech #banking https://t.co/cws8LZXwGV https://t.co/oscDDqv3WR']
+            
+            elif str(company_name).lower()=='alraedah':
+                tweet_list = ['#Alraedah #Finance signs an agreement with Saudi Kuwaiti Finance House https://t.co/sxaXrp7KaH https://t.co/UnOZmGZhWj', 'Alraedah Finance and Saudi Kuwaiti Finance House (SKFH) signed a strategic agreement to establish a closed-ended investment fund which aims to invest SAR 300 million to support SMEs\nhttps://t.co/9krf5YJMls\n@AlRaedahFinance \n#economy #intlbm #investment #products #sustainable https://t.co/Ya0mho8N2E', 'Alraedah Finance signs an agreement with Saudi Kuwaiti Finance House - ZAWYA https://t.co/NKQaoYmoLs', '#روضة_بداية_الرائدة \n#العودة_للدارسة \n#العودة_للدراسة https://t.co/ccrHY8myPX']
+            
             max_len = max(len(tweet_list), len(ig_post_list), len(google_reviews_list))
             
             tweet_list.extend([''] * (max_len - len(tweet_list)))

@@ -117,9 +117,9 @@ def admin_dash():
 
     if sentiment_filter != 'All':
         filtered_df = filtered_df[
-            (filtered_df['Average_Sentiment'] > 50) if sentiment_filter == 'High'
-            else (filtered_df['Average_Sentiment'] <= 50)
-        ]
+        (filtered_df['Average_Sentiment'].str.rstrip('%').astype(float) > 50) if sentiment_filter == 'High' 
+        else (filtered_df['Average_Sentiment'].str.rstrip('%').astype(float) <= 50)
+    ]
 
     if company_name_filter != 'All':
         filtered_df = filtered_df[filtered_df['Company_Name'] == company_name_filter]

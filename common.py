@@ -169,7 +169,7 @@ def set_custom_css():
     font-weight:bold;
     }
     h3 {
-     color:#00FF00 !important;
+     color: #3498db !important;
      text-align:center;
     align:center;
     font-weight:bold;
