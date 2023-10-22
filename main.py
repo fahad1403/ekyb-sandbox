@@ -406,13 +406,29 @@ def login_page():
 steps = ["", "CR verification", "Contract Issuing", "VAT/Zakat", "Gosi", "ID Verification", "Expense Analysis", "Web Analysis", "Address verification", "Social Checks ", "Fraud Analysis", "PEP & AML"]
 
 def show_progress():
-    progress_html = "<div style='display: flex; justify-content: space-between; align-items: center; width: 100%;'>"
+    progress_html = "<div style='display: flex; justify-content: space-between; align-items: left; width: 100%;'>"
+    
+    # Define the CSS media query to hide steps on small screens
+    hide_on_small_screen = """
+        @media (max-width: 768px) {
+            .step {
+                display: none;
+            }
+        }
+    """
+
+    progress_html += f"<style>{hide_on_small_screen}</style>"
+
     for i, step in enumerate(steps):
-        checkpoint_style = "background-color: rgba(0,255,0,0.6); font-size: 12px;" if i <= st.session_state.step else ""
-        progress_html += (
-            "<div style='flex: 1; text-align: center; color: #555555; font-size: 13.5px; padding: 5px;'>"
-            f"{step}</div><div style='width: 12px; height: 12px; background-color: #aaaaaa; border-radius: 50%; {checkpoint_style}'></div>"
-        )
+        checkpoint_style = "background-color: rgba(0, 255, 0, 0.6); font-size: 12px;" if i <= st.session_state.step else ""
+        if i > 0:
+            progress_html += (
+                f"<div class='step' style='flex: 1; text-align: center; color: #555555; font-size: 13.5px; padding: 5px;'>{step}</div>"
+                f"<div style='width: 12px; height: 12px; background-color: #aaaaaa; border-radius: 50%; {checkpoint_style}'></div>"
+            )
+        else:
+            progress_html += f"<div style='flex: 1; text-align: center; align:left color: #555555; font-size: 13.5px; padding: 5px;'>{step}</div>"
+    
     progress_html += "</div>"
     st.markdown(progress_html, unsafe_allow_html=True)
 
