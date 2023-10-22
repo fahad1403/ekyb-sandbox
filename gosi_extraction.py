@@ -8,7 +8,6 @@ import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
 from hijri_converter import convert
-from persiantools.jdatetime import JalaliDate
 from google.cloud import translate_v2 as translate
 from collections import OrderedDict
 
