@@ -7,10 +7,18 @@ from streamlit_modal import Modal
 import json
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from common import set_custom_css
+import time
+from streamlit.components.v1 import html
 import streamlit.components.v1 as components
-
+import json
+# from app import set_custom_css
 pep_data = ["PEP", "AML", "Sanctions"]
 aml_data = ["Pass", "Pass", "Fail"]
+
+import streamlit as st
+from streamlit_modal import Modal
+
+import streamlit.components.v1 as components
 
 def admin_dash():
    
@@ -117,9 +125,9 @@ def admin_dash():
 
     if sentiment_filter != 'All':
         filtered_df = filtered_df[
-        (filtered_df['Average_Sentiment'].str.rstrip('%').astype(float) > 50) if sentiment_filter == 'High' 
-        else (filtered_df['Average_Sentiment'].str.rstrip('%').astype(float) <= 50)
-    ]
+            (filtered_df['Average_Sentiment'] > 50) if sentiment_filter == 'High'
+            else (filtered_df['Average_Sentiment'] <= 50)
+        ]
 
     if company_name_filter != 'All':
         filtered_df = filtered_df[filtered_df['Company_Name'] == company_name_filter]
@@ -166,7 +174,7 @@ def admin_dash():
         sel_row = grid["selected_rows"]
         if sel_row:
             modal = Modal(key="Details_Modal",title="Comprehensive Details")
-            open_modal = st.button("View Details")
+            open_modal = st.button("Open")
             if open_modal:
                 modal.open()
 
@@ -335,4 +343,230 @@ def admin_dash():
 
     # Add filters
     col1, col2, col3 = st.columns([1, 1, 1])
-    
+
+    # render_image = JsCode('''
+    #     function renderImage(params) {
+    #         const container = document.createElement("div");
+    #         const textNode = document.createTextNode(params.value); // Assuming 'params.value' is the text to be displayed
+    #         container.appendChild(textNode);
+    #         return container.outerHTML;
+    #     }
+    # ''')
+
+    # if filtered_df.empty:
+    #     st.warning('No data to display with the current filters.')
+    # else:
+    #     options_builder = GridOptionsBuilder.from_dataframe(filtered_df)
+    #     options_builder.configure_column('Timestamp', cellRenderer = render_image)
+    #     options_builder.configure_selection(selection_mode="single", use_checkbox=True)
+    #     options_builder.configure_default_column(width=150, resizable=True)
+    #     options_builder.configure_grid_options(domLayout='autoHeight', autoSizeColumns=True)
+    #     grid_options = options_builder.build()
+
+    #     # Create AgGrid component
+    #     grid = AgGrid(filtered_df, 
+    #                     gridOptions = grid_options,
+    #                     allow_unsafe_jscode=True,
+    #                     height=200, width=500, theme='streamlit')
+        
+    #     sel_row = grid["selected_rows"]
+    #     if sel_row:
+    #         modal = Modal(key="Demo Key",title="Comprehensive Details")
+    #         # if st.button("Close Modal"):
+    #         #         st.session_state.modal_open = False 
+    #         modal_state = st.checkbox("Open Modal")
+    #         # print('this is on clicking open modal',st.session_state.modal_open)
+    #         # Use st.session_state to track the modal state
+    #         if "modal_open" not in st.session_state:
+    #             # print('before turning false',st.session_state.modal_open)
+    #             st.session_state.modal_open = False
+    #             print('this is in if condition',st.session_state.modal_open)
+    #                     # Add a button inside the modal to close it
+    #         if modal_state:
+    #         # Set the modal state to open
+    #             st.session_state.modal_open = True
+    #             print('turning true in modal_state')
+    #             # print('this is in modal_state if condition',st.session_state.modal_open)
+
+    #         style = """
+    #             <style>
+    #             .streamlit-modal.st-ewKvni {
+    #                 width: 90%;
+    #                 height: 80% !important;
+    #                 top: 50% !important;
+    #                 left: 50% !important;
+    #                 transform: translate(-50%, -50%) !important;
+    #             }
+    #             .st-emotion-cache-rj5w3t e1f1d6gn0{
+    #             width:90%;
+    #             height:80%;
+    #             top:70%;
+    #             left:70%;
+    #             }
+    #             </style>
+    #         """
+    #         # Check the modal state and display the modal if it's open
+    #         if st.session_state.modal_open:
+    #             modal = st.beta_container()
+    #             print('this is below the beta container',st.session_state.modal_open)
+    #         with modal.container():
+    #             print('inside modal container')
+    #             col1, col2 = st.columns([1, 1])
+                
+    #             tab1, tab2, tab3  = st.tabs(["Overview", "Documents", "PEP & AML"])
+
+    #             with col1:
+    #                 selected_index = sel_row[0]['_selectedRowNodeInfo']['nodeRowIndex']
+    #                 gosi_issue_date=copy_df.loc[selected_index,'BUSINESS_GOSI_issue_date']
+    #                 vat_reg_number=copy_df.loc[selected_index,'VAT_Data_reg_number']
+    #                 company_url=copy_df.loc[selected_index,'Company_Url']
+    #                 st.write(f"<b>Business Name: </b>{sel_row[0]['Business_Name']}",unsafe_allow_html=True)
+    #                 st.write(f"<b>CR Number: </b>{sel_row[0]['CR_Number']}",unsafe_allow_html=True)
+    #                 st.write(f"<b>Vat Registration Number : </b>{vat_reg_number}",unsafe_allow_html=True)
+    #                 st.write(f"<b>Gosi Issue Date : </b>{gosi_issue_date}",unsafe_allow_html=True)
+    #                 # st.write(f"<b> GOSI Issue Date: </b>{gosi_issue_date}",unsafe_allow_html=True)
+    #                 # st.write(f"<b> GOSI Issue Date: </b>{sel_row[0]['']}",unsafe_allow_html=True) 
+
+
+    #                 cr_wathq_resp = copy_df.loc[selected_index, 'CR_DATA_WATHQ']
+    #                 cr_pdf = copy_df.loc[selected_index, 'CR_PDF']
+    #                 # gosi_business_expander= copy_df.loc[selected_index, 'BUSINESS_GOSI_Data']
+                     
+    #                 gosi_business_pdf = copy_df.loc[selected_index, 'BUSINESS_GOSI_PDF']
+    #                 vat_resp = copy_df.loc[selected_index, 'VAT_Data']
+    #                 vat_pdf = copy_df.loc[selected_index, 'VAT_PDF']
+    #                 business_gosi_data=copy_df.loc[selected_index,'BUSINESS_GOSI_Data']
+    #                 # id_data=copy_df.loc[selected_index,'ID_Data']
+    #                 expense_data=json.loads(df.loc[selected_index,'Expense_Data'])
+    #                 customer_gosi_pdf=copy_df.loc[selected_index,'BUSINESS_GOSI_PDF']
+    #                 bank_statement_pdf=copy_df.loc[selected_index,'BANK_STATEMENT']
+
+    #             button_id = "show_pdf_button"
+    #             pdf_container_id = "pdf_container"
+
+    #             with col2:
+    #                 vat_reg_date=copy_df.loc[selected_index,'VAT_Data_reg_date']
+    #                 cr_location=copy_df.loc[selected_index,'BUSINESS_location']
+    #                 gosi_expiry_date=copy_df.loc[selected_index,'BUSINESS_GOSI_number']
+    #                 business_owner_name=copy_df.loc[selected_index,'BUSINESS_owner_name']
+    #                  # Display the "CR File.pdf" text
+    #                 st.write(f"<b>Business Owner: </b>{business_owner_name}",unsafe_allow_html=True)
+    #                 st.write(f"<b>Business Location : </b>{cr_location}",unsafe_allow_html=True) 
+    #                 st.write(f"<b>Vat Registration Date: </b>{vat_reg_date}",unsafe_allow_html=True) 
+    #                 st.write(f"<b>Gosi Expiry Date: </b>{gosi_expiry_date}",unsafe_allow_html=True)
+                    
+                    
+                
+               
+    #             data=json.loads(copy_df.loc[selected_index, 'Expense_Data'])
+                
+    #             df = pd.DataFrame(data)
+
+
+
+    #             with tab1:
+    #                 col1,col2=st.columns([1,1])
+    #                 with col1:
+    #                    socialcheck_twitter=copy_df.loc[selected_index,'Social_Checks_Twitter']
+    #                    socialcheck_google=copy_df.loc[selected_index,'Social_Checks_Google']
+    #                    average_sentiment=filtered_df.loc[selected_index,'Average_Sentiment']
+    #                    st.write(f"<b>Business Name: </b>{sel_row[0]['Business_Name']}",unsafe_allow_html=True)
+    #                    st.write(f"<b>Business URL: </b>{sel_row[0]['Company_Url']}",unsafe_allow_html=True)
+    #                    user_entered_address = copy_df.loc[selected_index, 'Address1']
+    #                    google_address = copy_df.loc[selected_index, 'Address2']
+    #                    st.write(f"<b>User Entered Address : </b>{user_entered_address}",unsafe_allow_html=True)
+    #                    st.write(f"<b>Google  Address : </b>{google_address}",unsafe_allow_html=True)
+    #                    st.write(f"<b>Average Sentiment : </b>{average_sentiment}",unsafe_allow_html=True)
+    #                    st.write(f"<b>Social Check Twitter : </b>{socialcheck_twitter}",unsafe_allow_html=True)
+    #                    st.write(f"<b>Social Check Google : </b>{socialcheck_google}",unsafe_allow_html=True)
+                      
+    #                 with col2:
+    #                     with st.expander("CR Wathq Response"):
+    #                         st.json(f"{cr_wathq_resp}")
+                    
+    #                     with st.expander("ZAKAT/VAT Data"):
+    #                         st.json(f"{vat_resp}")
+    #                     with st.expander("Business Gosi Data"):
+    #                         st.json(f"{business_gosi_data}")
+    #                     with st.expander("Id Data"):
+    #                         id_data=json.loads(copy_df.loc[selected_index,'ID_Data'])
+    #                         data= id_data
+    #                         print(id_data)
+    #                         df=pd.DataFrame(data, index=[0])
+    #                         st.table(df)
+    #                     with st.expander("Expense Data"):
+    #                         data=json.loads(copy_df.loc[selected_index, 'Expense_Data'])
+    #                         df=pd.DataFrame(data)
+    #                         st.table(df)
+    #             with tab2:
+    #                 col1, col2, col3,  = st.columns([1, 1, 1])
+    #                 col4, col5, col6 =st.columns([1,1,1])
+    #                 with col1:
+    #                     # Center-align the text "CR File"
+    #                     st.markdown('<div style="text-align: left; margin-bottom: 20px;"><b>CR File</b></div>', unsafe_allow_html=True)
+    #                     st.markdown(f'<iframe src="https://drive.google.com/viewerng/viewer?embedded=true&url={cr_pdf}"  height="300" frameborder="0"></iframe>', unsafe_allow_html=True)
+    #                 #    st.write(f"<b>CR File: </b>{cr_pdf}",unsafe_allow_html=True)
+    #                 with col2:
+    #                     # Center-align the text "ZAKAT/VAT File"
+    #                      # Center-align the text "CUSTOMER GOSI FILE" with some vertical spacing
+    #                     st.markdown('<div style="text-align: left; margin-bottom: 20px;"><b>CUSTOMER GOSI FILE</b></div>', unsafe_allow_html=True)
+    #                     st.markdown(f'<iframe src="https://drive.google.com/viewerng/viewer?embedded=true&url={vat_pdf}"   height="300" frameborder="0"></iframe>', unsafe_allow_html=True)
+    #                     # st.write(f"<b>CR File: </b>{cr_pdf}",unsafe_allow_html=True)
+                    
+    #                 # st.write(f"<b>ZAKAT/VAT File: </b>{cr_pdf}",unsafe_allow_html=True)
+    #                 with col3:
+    #                     # Center-align the text "ZAKAT/VAT File"
+    #                     st.markdown('<div style="font-weight:bold; font-size:15px; text-align: left; margin-bottom: 20px;"><b>BUSINESS GOSI FILE</b></div>', unsafe_allow_html=True)
+    #                     st.markdown(f'<iframe src="https://drive.google.com/viewerng/viewer?embedded=true&url={gosi_business_pdf} height="300" frameborder="0"></iframe>', unsafe_allow_html=True)
+                        
+    #                 with col4:
+    #                     # Center-align the text "ZAKAT/VAT File"
+    #                     st.markdown('<div style="text-align: left; margin-top: 20px;"><b>CUSTOMER GOSI FILE</b></div>', unsafe_allow_html=True)
+    #                     st.markdown(f'<iframe src="https://drive.google.com/viewerng/viewer?embedded=true&url={customer_gosi_pdf} height="300" frameborder="0"></iframe>', unsafe_allow_html=True)
+    #                 with col5:
+    #                      # Center-align the text "ZAKAT/VAT File"
+    #                     st.markdown('<div style="text-align: left; margin-top: 20px;"><b>BANK STATEMENT FILE</b></div>', unsafe_allow_html=True)
+    #                     st.markdown(f'<iframe src="https://drive.google.com/viewerng/viewer?embedded=true&url={bank_statement_pdf}height="300"  frameborder="0"></iframe>', unsafe_allow_html=True)
+                        
+    #                 with col6:
+    #                     image_links = copy_df.loc[selected_index, 'ID_Image'].split(',')  # Split the comma-separated links
+    #                     image_width=300
+    #                     image_height=400
+    #                     print('This is image links',image_links)
+    #                     for link in image_links:
+    #                         st.image(link, use_column_width='always', output_format='JPEG') 
+    #                         st.markdown(
+    #                         f'<style>.stImage > img {{max-height: 200px;max-width:200px;margin-top:20px}}</style>', 
+    #                         unsafe_allow_html=True
+    #                         )
+    #                     print('this is the link',link)
+
+    #             with tab3:
+    #                 # Title for tab3
+    #                 st.write("<h2>PEP & AML</h2>", unsafe_allow_html=True)
+
+    #                 # Create a column layout
+    #                 col1, col2, col3 = st.columns(3)
+
+    #                 # Display PEP data and status
+    #                 col1.write("PEP List")
+    #                 col1.write("AML List")
+    #                 col1.write("Sanctions List")
+
+    #                 col2.write("<b>Pass</b>✅",unsafe_allow_html=True)
+    #                 col2.write("<b>Pass</b>✅",unsafe_allow_html=True)
+    #                 col2.write("<b>Pass</b>✅",unsafe_allow_html=True)
+    #                 print('this is modal container',modal.container)
+
+def close_modal(modal):
+    # Clear the content within the modal container
+    # with modal.container():
+    closebutton=st.button("Close Modal")
+    if closebutton:
+        modal.container=[]
+        st.session_state.modal_open=False
+    print('insidie close modal function it is closed',st.session_state.modal_open)
+    #     st.empty()
+    # modal.container==[]
+    # print('this is close modal',modal.container)
+                

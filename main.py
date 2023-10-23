@@ -1608,19 +1608,19 @@ def sentiment_scrape():
 
             # Add text labels for "Positive" and "Negative" along with their numbers (increase font size)
             fig.add_annotation(
-                text=f"<b>Positive:</b> {int(avg_prob * 100)}%",
-                xref="paper", yref="paper",
-                x=0.15, y=0.90,
-                showarrow=False,
-                font=dict(size=17, color="green")
+            text=f"<b>Positive:</b> {int(avg_prob * 100)}%",
+            xref="paper", yref="paper",
+            x=0.5, y=0.95,
+            showarrow=False,
+            font=dict(size=17, color="green")
             )
             fig.add_annotation(
                 text=f"<b>Negative:</b> {int((1 - avg_prob) * 100)+1}%",
                 xref="paper", yref="paper",
-                x=0.15, y=0.85,
+                x=0.5, y=0.90,
                 showarrow=False,
                 font=dict(size=17, color="red")
-            )
+            )  
 
             fig.update_xaxes(showticklabels=False, showgrid=False, row=1, col=1)
             fig.update_yaxes(showticklabels=False, showgrid=False, row=1, col=1)
@@ -1644,10 +1644,11 @@ def sentiment_scrape():
             fig.update_xaxes(showgrid=False)
             fig.update_yaxes(showgrid=False)
 
-            # Increase height of each plot
-            fig.update_layout(title="Sentiment Distribution")
-            min_height=700
-            st.plotly_chart(fig, use_container_width=True, use_container_height=False,height=min_height)
+            # fig.update_layout(title="Sentiment Distribution")
+            # min_height=700
+            fig.update_layout(title="Sentiment Distribution",height=700,margin=dict(l=20, r=20, t=60, b=30))
+            st.plotly_chart(fig, use_container_width=True, use_container_height=True)
+            # st.plotly_chart(fig, use_container_width=True, use_container_height=False,height=min_height)
 
             st.session_state.next_button_enabled = True
             st.session_state.step += 1
@@ -1712,23 +1713,19 @@ def world_check():
     company_name = ""
     if hasattr(st.session_state, 'company_name'):
         company_name = st.session_state.company_name
-        company_name = f"for {company_name.lower()}"
+        company_name = company_name.lower()
         
     if st.button("Get Results"):
-        with st.spinner(f"Extracting Results {company_name}.."):
+        with st.spinner(f"Extracting Results for {company_name}.."):
             time.sleep(2)
 
         time.sleep(2)
 
         col1, col2 = st.columns(2)
         with col1:
-            st.success("AML")
-            st.success("PEP")
-            st.success("Sanctions")
-
-        with col2:
-            for _ in range(3):
-                st.markdown('<p style="font-size:24px; padding-top:16px">✅</p>', unsafe_allow_html=True)
+            st.success("AML ✅")
+            st.success("PEP ✅")
+            st.success("Sanctions ✅")
 
 if st.session_state.admin_step == 1:
     st.session_state.login_page = True
