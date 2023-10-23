@@ -237,7 +237,7 @@ def admin_dash():
                                 user_entered_address = copy_df.loc[selected_index, 'Address1']
                                 google_address = copy_df.loc[selected_index, 'Address2']
                                 st.write(f"<b>User Entered Address : </b>{user_entered_address}",unsafe_allow_html=True)
-                                st.write(f"<b>Google  Address : </b>{google_address}",unsafe_allow_html=True)
+                                st.write(f"<b>Google Fetched Address : </b>{google_address}",unsafe_allow_html=True)
                                 st.write(f"<b>Average Sentiment : </b>{average_sentiment}",unsafe_allow_html=True)
                                 st.write(f"<b>Social Check Twitter : </b>{socialcheck_twitter}✅",unsafe_allow_html=True)
                                 st.write(f"<b>Social Check Google : </b>{socialcheck_google}✅",unsafe_allow_html=True)
@@ -271,7 +271,7 @@ def admin_dash():
                             with col2:
                                 # Center-align the text "ZAKAT/VAT File"
                                 # Center-align the text "CUSTOMER GOSI FILE" with some vertical spacing
-                                st.markdown('<div style="text-align: left; margin-bottom: 20px;"><b>CUSTOMER GOSI FILE</b></div>', unsafe_allow_html=True)
+                                st.markdown('<div style="text-align: left; margin-bottom: 20px;"><b>VAT/ZAKAT FILE</b></div>', unsafe_allow_html=True)
                                 st.markdown(f'<iframe src="https://drive.google.com/viewerng/viewer?embedded=true&url={vat_pdf}"   height="300" frameborder="0"></iframe>', unsafe_allow_html=True)
                                 # st.write(f"<b>CR File: </b>{cr_pdf}",unsafe_allow_html=True)
                             
