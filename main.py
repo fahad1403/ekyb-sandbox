@@ -1860,6 +1860,10 @@ def world_check():
             st.success("PEP ✅")
             st.success("Sanctions ✅")
 
+            if st.button('Back to CR page'):
+                st.session_state.admin_step = 1
+                st.session_state.login_page = True
+
 if st.session_state.admin_step == 1:
     st.session_state.login_page = True
     st.session_state.step=15
