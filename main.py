@@ -422,13 +422,13 @@ def show_progress():
     progress_html += f"<style>{hide_on_small_screen}</style>"
 
     for i, step in enumerate(steps):
-        checkpoint_style = "background-color: rgba(0, 255, 0, 0.6); font-size: 12px;" if i <= st.session_state.step else ""
+        checkpoint_style = "background-color: rgba(0, 255, 0, 0.6); font-size: 12px; padding: 2px;" if i <= st.session_state.step else ""
         if i > 0:
             progress_html += (
-                f"<div class='step' style='flex: 1; text-align: center; color: #555555; font-size: 13.5px; padding: 5px;'>{step}</div>"
+                f"<div class='step' style='flex: 1; text-align: center; color: #555555; font-size: 13.5px; padding: 7px;'>{step}</div>"
                 f"<div style='display: flex; flex-direction: column; align-items: center;'>"
                 f"<div style='width: 12px; height: 12px; background-color: #aaaaaa; border-radius: 50%; {checkpoint_style}'></div>"
-                f"<div style='font-size: 12px; color: #555555;'>{i + 1}</div>"
+                f"<div style='font-size: 12px; color: #555555;'>{i}</div>"
                 f"</div>"
             )
         else:
