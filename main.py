@@ -1189,7 +1189,7 @@ def expense_benchmarking_page():
 
                         # Creating a Plotly donut chart
                         fig1 = go.Figure(data=[go.Pie(labels=categories, values=amounts, hole=0.5, marker=dict(colors=colors))])
-                        fig1.update_layout(title_text="Expense Categorization")
+                        fig1.update_layout(title_text="Expense Categorization", margin=dict(l=50))
                         st.plotly_chart(fig1, use_container_width=True, use_container_height=False, height=min_chart_height)
 
                         st.session_state.next_button_enabled = True
@@ -1688,11 +1688,15 @@ def sentiment_scrape():
             elif str(company_name).lower()=='alraedah':
                 tweet_list = ['#Alraedah #Finance signs an agreement with Saudi Kuwaiti Finance House https://t.co/sxaXrp7KaH https://t.co/UnOZmGZhWj', 'Alraedah Finance and Saudi Kuwaiti Finance House (SKFH) signed a strategic agreement to establish a closed-ended investment fund which aims to invest SAR 300 million to support SMEs\nhttps://t.co/9krf5YJMls\n@AlRaedahFinance \n#economy #intlbm #investment #products #sustainable https://t.co/Ya0mho8N2E', 'Alraedah Finance signs an agreement with Saudi Kuwaiti Finance House - ZAWYA https://t.co/NKQaoYmoLs', '#روضة_بداية_الرائدة \n#العودة_للدارسة \n#العودة_للدراسة https://t.co/ccrHY8myPX']
             
+            print(f"tweet list: {tweet_list}\nig_post list : {ig_post_list}")
+
             max_len = max(len(tweet_list), len(ig_post_list), len(google_reviews_list))
             
             tweet_list.extend([''] * (max_len - len(tweet_list)))
             ig_post_list.extend([''] * (max_len - len(ig_post_list)))
             google_reviews_list.extend([''] * (max_len - len(google_reviews_list)))
+
+            print(f"tweet list updated: {tweet_list}\nig_post list updated: {ig_post_list}")
 
             scrapes['Twitter'] = tweet_list
             scrapes['Twitter'] = ig_post_list
