@@ -46,6 +46,15 @@ PASSWORD = "ekyb-sandbox"
 
 st.set_page_config(layout="wide")
 
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header{visibility:hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 if 'step' not in st.session_state:
     st.session_state.step = 0
 
@@ -275,15 +284,6 @@ def gcloud_translate(text, src='ar', dest='en'):
     translate_client = translate.Client.from_service_account_json('translate_creds.json')
     result = translate_client.translate(text, source_language=src, target_language=dest)
     return result['translatedText']
-
-hide_streamlit_style = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header{visibility:hidden;}
-</style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 def check_admin_credentials(username, password):
     if username == "admin" and password == "admin":
@@ -1865,9 +1865,9 @@ def world_check():
             st.success("PEP ✅")
             st.success("Sanctions ✅")
 
-            if st.button('Back to CR page'):
-                st.session_state.admin_step = 1
-                st.session_state.login_page = True
+            # if st.button('Back to CR page'):
+            #     st.session_state.admin_step = 1
+            #     st.session_state.login_page = True
 
 if st.session_state.admin_step == 1:
     st.session_state.login_page = True
