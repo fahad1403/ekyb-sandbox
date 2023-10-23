@@ -161,7 +161,7 @@ def twitter_scrape(business_name):
 def instagram_scrape(business_name):
     api_url = "https://www.page2api.com/api/v1/scrape"
     payload = {
-        "api_key": "e44b6cbf3c70e25bbfb856aa0c19560e09fcf85b",
+        "api_key": "9f68d79174d4e7eced231f2c8ae305730322a732",
         "url": f"https://www.instagram.com/explore/tags/{business_name}/",
         "parse": {
         "posts": [
