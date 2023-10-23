@@ -364,6 +364,7 @@ def login_page():
             st.success("Login successful! Proceed to the CR verification screen.")
             st.session_state.step = 1
             st.session_state.login_page = True
+            st.experimental_rerun()
         elif submit and not check_credentials(username, password):
             st.error("Login failed. Please check your credentials.")
 
@@ -379,6 +380,7 @@ def login_page():
             st.success("Admin Login successful! Redirecting to Admin Dashboard.")
             st.session_state.admin_step = 1
             st.session_state.admin_login_page = True
+            st.experimental_rerun()
         elif submit and not check_admin_credentials(admin_username, admin_password):
             st.error("Admin Login failed. Please check your credentials.")
 
@@ -424,7 +426,10 @@ def show_progress():
         if i > 0:
             progress_html += (
                 f"<div class='step' style='flex: 1; text-align: center; color: #555555; font-size: 13.5px; padding: 5px;'>{step}</div>"
+                f"<div style='display: flex; flex-direction: column; align-items: center;'>"
                 f"<div style='width: 12px; height: 12px; background-color: #aaaaaa; border-radius: 50%; {checkpoint_style}'></div>"
+                f"<div style='font-size: 12px; color: #555555;'>{i + 1}</div>"
+                f"</div>"
             )
         else:
             progress_html += f"<div style='flex: 1; text-align: center; align:left color: #555555; font-size: 13.5px; padding: 7px;'>{step}</div>"

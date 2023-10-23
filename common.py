@@ -202,6 +202,10 @@ def set_custom_css():
      font-size: 12px;
     }
     }
+    div[data-modal-container='true'][key='Details_Modal'] > div:first-child > div:first-child{
+                             max-height: 700px; /* Adjust the maximum height as needed */
+                            overflow-y: auto !important;
+    }
     .st-emotion-cache-rj5w3t e1f1d6gn0{
                 width:90%;
                 height:80%;
