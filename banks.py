@@ -18,6 +18,7 @@ import pandas as pd
 import itertools    
 os.sys.path
 from io import StringIO
+import streamlit as st
 
 class Banks:
 
@@ -219,12 +220,12 @@ class Banks:
             # Initialize final_dict and obj
             final_dict = {}
             obj = {}
-            pdf_document = PdfReader(io.BytesIO(pdf_file_path))
-            plain_text_data = []
-            for page in pdf_document.pages:
-                page_text = page.extract_text()
-                page_text_blocks = page_text.split('\n')
-                plain_text_data.append(page_text_blocks)
+            with pdfplumber.open(io.BytesIO(pdf_file_path)) as pdf:
+                plain_text_data = []
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    page_text_blocks = page_text.split('\n')
+                    plain_text_data.append(page_text_blocks)
 
             # Account information
             if plain_text_data[-1][0] == 'CUSTOMER STATEMENT':
@@ -338,8 +339,13 @@ class Banks:
             df['running_balance'] = pd.to_numeric(df['running_balance'], errors='coerce')
             df['running_balance_diff'] = df['running_balance'].diff()
             df['timestamp'] = pd.to_datetime(df['timestamp'], format='%d/%m')
+            current_year = datetime.now().year
+            df['timestamp'] = df['timestamp'].apply(lambda x: x.replace(year=current_year) if pd.notnull(x) else x)
+
             df.loc[df['running_balance_diff'] < 0, 'amount'] = -df['amount']
             df = df.drop(columns=['running_balance_diff'])
+
+            print(f"Dataframe: {df}")
 
             if not df.empty and opening_balance is not None and df.iloc[0]['amount'] < opening_balance:
                 df.at[0, 'amount'] = -df.iloc[0]['amount']

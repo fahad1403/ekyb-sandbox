@@ -743,7 +743,7 @@ def wathq_contract_issuing():
             wathq_data = json.loads(wathq_data)
             wathq_contract_data = generate_wathq_contract_data(wathq_data)
 
-            with st.expander("Wathq Contract Verification"):
+            with st.expander("Wathq Contract Verification", expanded=True):
                 st.json(wathq_contract_data)
         
                 st.session_state.next_button_enabled = True
@@ -1081,7 +1081,7 @@ def expense_benchmarking_page():
     if st.button("Submit"):
         if uploaded_file is not None:
             with st.spinner("Reading Bank Statement..."):
-                data, expense_data = analyze_bank_statement(uploaded_file)
+                data, expense_category_data = analyze_bank_statement(uploaded_file)
                 if not data:
                     st.error("We do not support this bank statement format yet.")
                 else:
@@ -1092,7 +1092,7 @@ def expense_benchmarking_page():
                     st.session_state['gsheet_data']['BANK_STATEMENT'] = pdf_file_url
 
                     with st.spinner("Analyzing Results..."):
-                        st.write(f"Expense categories: {expense_data}")
+                        # st.write(f"Expense categories: {expense_data}")
                         
                         months = []
                         rev_values = []
@@ -1170,7 +1170,21 @@ def expense_benchmarking_page():
                         min_chart_height = 800  # You can change this value
                         # Use use_container_width=True for automatic width adjustment
                         st.plotly_chart(fig, use_container_width=True, use_container_height=False, height=min_chart_height)
-                        # st.plotly_chart(fig)
+
+                        expense_category_data = json.loads(expense_category_data)
+                        categories = [item["category"] for item in expense_category_data["expenses"]]
+                        amounts = [item["amount"] for item in expense_category_data["expenses"]]
+                        percentages = [item["percentage"] for item in expense_category_data["expenses"]]
+
+                        # Generating dynamic colors list with transparency
+                        colors = []
+                        for i in range(len(categories)):
+                            color = "rgba(" + str(random.randint(0, 255)) + "," + str(random.randint(0, 255)) + "," + str(random.randint(0, 255)) + ",0.4)"
+                            colors.append(color)
+
+                        # Creating a Plotly donut chart
+                        fig1 = go.Figure(data=[go.Pie(labels=categories, values=amounts, hole=0.5, marker=dict(colors=colors))], title='Expense Categorization',)
+                        st.plotly_chart(fig1, use_container_width=True, use_container_height=False, height=min_chart_height)
 
                         st.session_state.next_button_enabled = True
                         st.session_state.step += 1

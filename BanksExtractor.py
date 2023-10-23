@@ -17,6 +17,7 @@ import torch
 os.sys.path
 from io import BytesIO
 import pkg_resources
+import streamlit as st
 
 class BankExtractor:
 
@@ -177,9 +178,10 @@ class BankExtractor:
         # print('RAN')
         print("Detected Labels:", detected_labels)
         banks = Banks()
-        for label in detected_labels:
+        label = detected_labels[0]
+        # for label in detected_labels:
             # if label in const.bank_labels:
-            data.append(getattr(banks, label)(pdf_bytes))
+        json, data = (getattr(banks, label)(pdf_bytes))
                 # bank_labels[label](file_path)  # Call the corresponding function with the file_path
             # else:
                 # print(f"No function found for label: {label}")
@@ -187,9 +189,7 @@ class BankExtractor:
         #     print("Metadata Check Failed:", metadata_message)
 
         print(f"Data: {data}")
-        res = None
         if len(data) > 0:
-            res= data[0]
-            categorize_res = Incom_expense().income_detection(data)
-        return res, categorize_res
+            categorize_res = Incom_expense().income_detection(json)
+        return data, categorize_res
         

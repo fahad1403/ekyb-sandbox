@@ -235,6 +235,7 @@ class Incom_expense:
             words_model = tf.keras.models.load_model(csv_file_path+'/'+model_name+'/'+str(id))
 
         # try:
+            # res_json = json.load(res_json)
             transactions = pd.DataFrame.from_records(ast.literal_eval(res_json))
             transactions_ = transactions[[
                 'account_id','name','type', 'iban', 'account_number', 'currency_code', 'bank_name', 'branch', 'address']].drop_duplicates()
