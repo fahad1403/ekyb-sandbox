@@ -1188,7 +1188,7 @@ def expense_benchmarking_page():
                             colors.append(color)
 
                         # Creating a Plotly donut chart
-                        fig1 = go.Figure(data=[go.Pie(labels=categories, values=amounts, hole=0.5, marker=dict(colors=colors))], title='Expense Categorization')
+                        fig1 = go.Figure(data=[go.Pie(labels=categories, values=amounts, hole=0.5, marker=dict(colors=colors))])
                         fig1.update_layout(title_text="Expense Categorization")
                         st.plotly_chart(fig1, use_container_width=True, use_container_height=False, height=min_chart_height)
 
