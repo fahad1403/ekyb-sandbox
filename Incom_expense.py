@@ -16,8 +16,6 @@ import re
 pd.set_option('display.max_columns', None)
 
 start = time.time()
-
-from tqdm import tqdm
 import tensorflow as tf
 from nltk.tokenize import word_tokenize
 from pickle import load
