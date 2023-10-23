@@ -1704,7 +1704,7 @@ def sentiment_scrape():
             print(f"tweet list updated: {tweet_list}\nig_post list updated: {ig_post_list}")
 
             scrapes['Twitter'] = tweet_list
-            scrapes['Twitter'] = ig_post_list
+            scrapes['Instagram'] = ig_post_list
             scrapes['Google'] = google_reviews_list
 
             st.session_state['gsheet_data']['Social_Check'] = json.dumps(scrapes)
@@ -1714,7 +1714,7 @@ def sentiment_scrape():
                 data['Twitter'] = tweet_list
 
             if any(item.strip() for item in ig_post_list):
-                data['Twitter'] = ig_post_list
+                data['Instagram'] = ig_post_list
             
             if any(item.strip() for item in google_reviews_list):
                 data['Google Reviews'] = google_reviews_list
