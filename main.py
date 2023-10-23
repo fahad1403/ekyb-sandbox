@@ -403,7 +403,7 @@ def login_page():
 #     elif submit and not check_credentials(username, password):
 #         st.error("Login failed. Please check your credentials.")
 
-steps = ["", "CR verification", "Contract Issuing", "VAT/Zakat", "Gosi", "ID Verification", "Expense Analysis", "Web Analysis", "Address verification", "Social Checks ", "Fraud Analysis", "PEP & AML"]
+steps = ["", "CR verification", "Contract Issuing", "VAT/Zakat", "Gosi", "ID Verification", "Simah", "Expense Analysis", "Web Analysis", "Address verification", "Social Checks ", "Fraud Analysis", "PEP & AML"]
 
 def show_progress():
     progress_html = "<div style='display: flex; justify-content: space-between; align-items: left; width: 100%;'>"
@@ -922,6 +922,11 @@ def idv_page():
 
             # Check if the extracted name matches business owner name using fuzzy matching
             name = id_data.get("Name", "")
+            id_number = id_data.get("ID Number", "")
+
+            st.session_state.id_name = name
+            st.session_state.id_number = id_number
+
             similarity = fuzzy_match_fields(name, matching_name)
 
             if similarity >= 70:
@@ -950,6 +955,113 @@ def idv_page():
         if st.button("Next"):
             # Set the next page to "similar_web_page" (you can change this as needed)
              print(f"step: {st.session_state.step}")
+
+def simah_page():
+    show_progress_bar()
+    show_progress()
+    set_custom_css()
+    st.markdown('<h1 class="title">Simah Verification</h1>',unsafe_allow_html=True)
+
+    active_product_summary_df = pd.DataFrame({
+        "Product Type": ["Loan","Credit Card","Mobile No."],
+        "Creditor": ["*****","*****","*****"],
+        "Account Number": ["0000759****","0000759****","0000759****"],
+        "Installment Amount": ["472,309.00","175,000.00","3,988.00"],
+        "Credit Limit": ["42,309.00","15,000.00","5,000.00"],
+        "Outstanding Balance": ["20,000.00","5000.00","1,000.00"],
+        "Last Reported": ["16/6/2011","6/7/2012","14/12/2013"],
+        "Payment Status": ["Current","Overdue","Current"]
+    })
+
+    default_product_summary_df = pd.DataFrame({
+        "Product Type": ["Loan","Credit Card","Mobile No."],
+        "Creditor": ["*****","*****","*****"],
+        "Account Number": ["0000759****","0000759****","0000759****"],
+        "Date Reported": ["16/6/2011","6/7/2012","14/12/2013"],
+        "Total Default Amount": ["42,309.00","15,000.00","5,000.00"],
+        "Outstanding Default": ["0.00","5,000.00","1,000.00"],
+        "Default Status": ["Fully Paid","*****","*****"],
+        "Settlement Date": ["4/9/2012","",""]
+    })
+
+    active_product_loan_df1 = pd.DataFrame({
+        "Account Number ": ["30***** "],
+        "Date of Issuance": ["25/12/2014"],
+        "Credit limit": ["10,300.00 "],
+        "Installment Number": ["24"],
+        "Installment Amount": ["700"],
+        "Payment Frequency": ["Monthly"],
+        "Type of Guarantee": ["Cash"],
+        "Expiry Date": ["25/12/2014"]
+    })
+    active_product_loan_df2 = pd.DataFrame({
+        "Outstanding Balance": ["10,300.00"],
+        "Past Due Balance": ["0.00"],
+        "Last Amount Paid": ["0.00"],
+        "Last payment Date": ["25/12/2014"],
+        "Next Due Date": ["25/12/2014"],
+        "As Of Date ": ["25/12/2014"],
+        "Salary Assignment": ["No"],
+        "Closed Date": ["4/9/2012"]
+    })
+    credit_card_default_product_df1 = pd.DataFrame({
+        "Account Number ": ["30***** "],
+        "Date of Issuance": ["25/12/2014"],
+        "Credit limit": ["10,300.00 "],
+        "Installment Number": ["24"],
+        "Installment Amount": ["700"],
+        "Payment Frequency": ["Monthly"],
+        "Type of Guarantee": ["Cash"],
+        "Expiry Date": ["25/12/2014"]
+    })
+    credit_card_default_product_df2 = pd.DataFrame({
+        "Outstanding Balance": ["10,300.00"],
+        "Past Due Balance": ["0.00"],
+        "Last Amount Paid": ["0.00"],
+        "Last payment Date": ["25/12/2014"],
+        "Next Due Date": ["25/12/2014"],
+        "As Of Date ": ["25/12/2014"],
+        "Salary Assignment": ["No"],
+        "Closed Date": ["4/9/2012"]
+    })
+    if st.button("Get Simah Report"):
+        id_name = ""
+        if hasattr(st.session_state, 'id_name'):
+            id_number = st.session_state.id_number
+            id_name = st.session_state.id_name
+            id_name = f"for {id_name.lower()}"
+
+        with st.spinner(f"Getting Simah Report {id_name}..."):
+                time.sleep(2)
+        with st.spinner("Generating Results..."):
+                time.sleep(2)
+        with st.expander("Simah Report", expanded=True):
+            with st.container():
+                    st.markdown("<h4 style='color: #3498db;'>Active Product Summary</h4>", unsafe_allow_html=True)
+                    st.dataframe(active_product_summary_df)
+
+            with st.container():
+                    st.markdown("<h4 style='color: #3498db;'>Default Product Summary</h4>", unsafe_allow_html=True)
+                    st.dataframe(default_product_summary_df)
+
+            with st.container():
+                    st.markdown("<h4 style='color: #3498db;'>Active Product Loan</h4>", unsafe_allow_html=True)
+                    st.dataframe(active_product_loan_df1)
+                    st.dataframe(active_product_loan_df2)
+                
+            with st.container():
+                    st.markdown("<h4 style='color:#3498db;'>Credit Card Default Product</h4>", unsafe_allow_html=True)
+                    st.dataframe(credit_card_default_product_df1)
+                    st.dataframe(credit_card_default_product_df2)
+            
+        st.session_state.next_button_enabled = True
+        # st.session_state.next_page = "idv_page"
+        st.session_state.step += 1
+
+        if st.session_state.get("next_button_enabled"):
+            if st.button("Next"):
+                print(f"step: {st.session_state.step}")
+
 
 def analyze_bank_statement(pdf_file):
     pdf_bytes = pdf_file.read()
@@ -1663,40 +1775,41 @@ def thm_verification():
     show_progress()
     set_custom_css()
     st.markdown('<h1 class="title">Fraud Analysis</h1>',unsafe_allow_html=True)
-    with st.spinner("Identifying Device.."):
-        time.sleep(1)
+    if st.button("Get Analysis"):
+        with st.spinner("Identifying Device.."):
+            time.sleep(1)
 
-    with st.spinner("Fetching Results..."):
-        time.sleep(1)
-        if st.button("Get Analysis"):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("Device Fingerprint")
-                st.write("Device ID:", THM_RESPONSE["device_fingerprint"]["device_id"])  # Display the device ID
-                st.write("")
-                st.write("")
-            
-            with col2:
-                st.subheader("Identity Verification")
-                st.write("User Behavior Match:", THM_RESPONSE["identity_verification"]["user_behavior_match"])
-                st.write("Identity Verified:", THM_RESPONSE["identity_verification"]["identity_verified"])
+        with st.spinner("Fetching Results..."):
+            time.sleep(1)
 
-            with col1:
-                st.subheader("Geolocation")
-                st.write("Country:", THM_RESPONSE["geolocation"]["country"])
-                st.write("Latitude:", THM_RESPONSE["geolocation"]["latitude"])
-                st.write("Longitude:", THM_RESPONSE["geolocation"]["longitude"])
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Device Fingerprint")
+            st.write("Device ID:", THM_RESPONSE["device_fingerprint"]["device_id"])  # Display the device ID
+            st.write("")
+            st.write("")
+        
+        with col2:
+            st.subheader("Identity Verification")
+            st.write("User Behavior Match:", THM_RESPONSE["identity_verification"]["user_behavior_match"])
+            st.write("Identity Verified:", THM_RESPONSE["identity_verification"]["identity_verified"])
 
-            with col2:
-                st.subheader("Bot Detection")
-                st.write("Is Bot:", THM_RESPONSE["bot_detection"]["is_bot"])
+        with col1:
+            st.subheader("Geolocation")
+            st.write("Country:", THM_RESPONSE["geolocation"]["country"])
+            st.write("Latitude:", THM_RESPONSE["geolocation"]["latitude"])
+            st.write("Longitude:", THM_RESPONSE["geolocation"]["longitude"])
 
-            st.session_state.next_button_enabled = True
-            st.session_state.step += 1
-            # st.session_state.next_page = "address_verification_page"
-            if st.session_state.get("next_button_enabled"):
-                if st.button("Next"):
-                    print(f"step: {st.session_state.step}")
+        with col2:
+            st.subheader("Bot Detection")
+            st.write("Is Bot:", THM_RESPONSE["bot_detection"]["is_bot"])
+
+        st.session_state.next_button_enabled = True
+        st.session_state.step += 1
+        # st.session_state.next_page = "address_verification_page"
+        if st.session_state.get("next_button_enabled"):
+            if st.button("Next"):
+                print(f"step: {st.session_state.step}")
 
 def world_check():
 
@@ -1748,16 +1861,18 @@ elif st.session_state.step == 4:
 elif st.session_state.step == 5:
     idv_page()
 elif st.session_state.step == 6:
-    expense_benchmarking_page()
+    simah_page()
 elif st.session_state.step == 7:
-    similar_web_page()
+    expense_benchmarking_page()
 elif st.session_state.step == 8:
+    similar_web_page()
+elif st.session_state.step == 9:
     address_verification_page()
-elif st.session_state.step ==9:
+elif st.session_state.step ==10:
     sentiment_scrape()
-elif st.session_state.step == 10:
-    thm_verification()
 elif st.session_state.step == 11:
+    thm_verification()
+elif st.session_state.step == 12:
     world_check()
 # elif st.session_state.step == 15:
 #     admin_dash()
