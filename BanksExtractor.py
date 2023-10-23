@@ -10,7 +10,7 @@ from banks import Banks
 #from pdf2image import convert_from_bytes
 import fitz
 import constants1 as const
-
+from Incom_expense import Incom_expense
 import os
 import subprocess
 import torch 
@@ -165,6 +165,7 @@ class BankExtractor:
     def extract(self, pdf_bytes):
         # print('Extract starts')
         data=[]
+        res = {}
         # Check PDF metadata
         # metadata_result, metadata_message = self.__check_pdf_metadata(pdf_bytes)
         # print('Meatadata extract')
@@ -189,5 +190,6 @@ class BankExtractor:
         res = None
         if len(data) > 0:
             res= data[0]
-        return res 
+            categorize_res = Incom_expense().income_detection(data)
+        return res, categorize_res
         

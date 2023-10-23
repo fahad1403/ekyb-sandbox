@@ -954,9 +954,9 @@ def idv_page():
 def analyze_bank_statement(pdf_file):
     pdf_bytes = pdf_file.read()
     extractor = BankExtractor()
-    result = extractor.extract(pdf_bytes=pdf_bytes)
+    result, expense_result = extractor.extract(pdf_bytes=pdf_bytes)
     
-    return result
+    return result, expense_result
 
 def expense_benchmarking_page():
     #global st.session_state['gsheet_data']
@@ -969,7 +969,7 @@ def expense_benchmarking_page():
     if st.button("Submit"):
         if uploaded_file is not None:
             with st.spinner("Reading Bank Statement..."):
-                data = analyze_bank_statement(uploaded_file)
+                data, expense_data = analyze_bank_statement(uploaded_file)
                 if not data:
                     st.error("We do not support this bank statement format yet.")
                 else:
@@ -980,6 +980,7 @@ def expense_benchmarking_page():
                     st.session_state['gsheet_data']['BANK_STATEMENT'] = pdf_file_url
 
                     with st.spinner("Analyzing Results..."):
+                        st.write(f"Expense categories: {expense_data}")
                         
                         months = []
                         rev_values = []
