@@ -216,13 +216,15 @@ class Banks:
     
     def riyadh_1(self,pdf_file_path):
         try:
-            # Read the PDF file using pdfplumber
-            with pdfplumber.open(io.BytesIO(pdf_file_path)) as pdf:
-                plain_text_data = []
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    page_text_blocks = page_text.split('\n')
-                    plain_text_data.append(page_text_blocks)
+            # Initialize final_dict and obj
+            final_dict = {}
+            obj = {}
+            pdf_document = PdfReader(io.BytesIO(pdf_file_path))
+            plain_text_data = []
+            for page in pdf_document.pages:
+                page_text = page.extract_text()
+                page_text_blocks = page_text.split('\n')
+                plain_text_data.append(page_text_blocks)
 
             # Account information
             if plain_text_data[-1][0] == 'CUSTOMER STATEMENT':
@@ -252,7 +254,7 @@ class Banks:
                         parts = item.split()
                         number_of_withdrawals = int(parts[0].replace(',', ''))
                         expenses = float(parts[2].replace(',', ''))
-            print(f"Details of balc: {expenses}, {revenues}, {closing_balance}, {opening_balance}")
+
             # Transaction information
             lst_1 = []
 
@@ -277,53 +279,79 @@ class Banks:
             lst_2 = [[item for item in sublist if not item.startswith(('Public shareholding', 'Beginning Balance'))] for sublist in lst_1]
             lst_3 = [item for sublist in lst_2 for item in sublist]
 
-            # Initialize lists to store extracted data
             dates = []
             amounts = []
             running_balances = []
             descriptions = []
 
             # Regular expression pattern for the specified format
-            pattern = r'(\d{2}/\d{2}) (.+) (\d+\.\d{2}) (\d+\.\d{2})'
+            pattern = r'(\d{2}/\d{2}) ([A-Z\s]+) (\d+\.\d+) (\d+\.\d+)'
 
-            # Iterate through the list and extract relevant information
-            for item in lst_3:
-                match = re.match(pattern, item)
-                if match:
-                    date, description, amount, running_balance = match.groups()
+            matching_indexes = []
+
+            for i, item in enumerate(lst_3):
+                if re.match(pattern, item):
+                    matching_indexes.append(i)
+
+            # print("Indexes of elements matching the specified format:")
+            # print(matching_indexes)
+            # Create a new list with elements concatenated
+            new_list = []
+            i = 0
+            while i < len(lst_3):
+                if i in matching_indexes:
+                    # Concatenate the elements between the matching indexes
+                    concatenated = lst_3[i]
+                    i += 1
+                    while i < len(lst_3) and i not in matching_indexes:
+                        concatenated += ' ' + lst_3[i]
+                        i += 1
+                    new_list.append(concatenated)
+                else:
+                    new_list.append(lst_3[i])
+                    i += 1
+
+            # Iterate through each element in the list
+            for text in new_list:
+                matches = re.findall(pattern, text)
+
+                # Initialize the 'Description' with the text matching the pattern
+                description = ' '.join(match[1] for match in matches)
+
+                for match in matches:
+                    date, _, amount, running_balance = match
                     dates.append(date)
-                    amounts.append(float(amount.replace(',', '')))
-                    running_balances.append(float(running_balance.replace(',', '')))
-                    descriptions.append(description)
+                    amounts.append(float(amount))
+                    running_balances.append(float(running_balance))
 
-            # Create a DataFrame
-            df = pd.DataFrame({'date': dates, 'description': descriptions, 'amount': amounts, 'running_balance': running_balances})
+                # Remove the matched portion from the text
+                for match in matches:
+                    text = text.replace(' '.join(match), '')
 
-            # Convert running_balance to numeric
+                # Add the remaining text to the 'Description' column
+                description += ' ' + text
+                descriptions.append(description)
+
+            # Create a DataFrame to store the extracted data
+            data = {'timestamp': dates, 'amount': amounts, 'running_balance': running_balances, 'description': descriptions}
+            df = pd.DataFrame(data)
             df['running_balance'] = pd.to_numeric(df['running_balance'], errors='coerce')
-
-            # Calculate the difference in running balance compared to the previous row
             df['running_balance_diff'] = df['running_balance'].diff()
-
-            df['date'] = pd.to_datetime(df['date'], format='%d/%m')
-
-            # Set the amount to negative if running_balance_diff is negative
+            df['timestamp'] = pd.to_datetime(df['timestamp'], format='%d/%m')
             df.loc[df['running_balance_diff'] < 0, 'amount'] = -df['amount']
-
-            # Drop the running_balance_diff column
             df = df.drop(columns=['running_balance_diff'])
 
             if not df.empty and opening_balance is not None and df.iloc[0]['amount'] < opening_balance:
                 df.at[0, 'amount'] = -df.iloc[0]['amount']
 
-            rev_month = df[df['amount'] > 0].groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index().round(2)
-            exp_month = df[df['amount'] < 0].groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index().round(2)    
-            result = df.groupby(pd.Grouper(key='date', freq='M'))['amount'].sum().round(2).reset_index()
+            rev_month = df[df['amount'] > 0].groupby(pd.Grouper(key='timestamp', freq='M'))['amount'].sum().round(2).reset_index().round(2)
+            exp_month = df[df['amount'] < 0].groupby(pd.Grouper(key='timestamp', freq='M'))['amount'].sum().round(2).reset_index().round(2)    
+            result = df.groupby(pd.Grouper(key='timestamp', freq='M'))['amount'].sum().round(2).reset_index()
 
             final_dict = {
-                'free cash flows': dict(zip(result['date'].dt.strftime('%Y-%m'), result['amount'])),
-                'rev_by_month': dict(zip(rev_month['date'].dt.strftime('%Y-%m'), rev_month['amount'])),
-                'exp_by_month': dict(zip(exp_month['date'].dt.strftime('%Y-%m'), exp_month['amount']))
+                'free cash flows': dict(zip(result['timestamp'].dt.strftime('%Y-%m'), result['amount'])),
+                'rev_by_month': dict(zip(rev_month['timestamp'].dt.strftime('%Y-%m'), rev_month['amount'])),
+                'exp_by_month': dict(zip(exp_month['timestamp'].dt.strftime('%Y-%m'), exp_month['amount']))
             }
 
 
@@ -336,13 +364,32 @@ class Banks:
                 'expenses':expenses,    
             }     
             final_dict.update(obj)
-            
-            return final_dict
 
+            obj_2 = {
+                    "account_id": "",
+                    "name": 'Abdullah Hafez',
+                    "currency_code": 'SAR',
+                    "type": '',
+                    "iban": 'SA34 2000 0009 3233 6449 9940',
+                    "account_number": '9323364499940',
+                    "bank_name": "riyad bank",
+                    "branch": '',
+                    "credit": "",
+                    "address":""
+                        } 
+
+            df['timestamp'] = df['timestamp'].dt.strftime('%Y-%m-%d')
+            for key, value in obj_2.items():
+                        df[key] = value
+            json_data = df.to_json(orient='records')
+
+
+            return json_data, final_dict
         except Exception as e:
-            print(f"An error occurred: {str(e)}")
-            return None
-        
+            print("Error processing the PDF file:")
+            print(str(e))
+            return None, None
+
     
     def aljazira_1(self,pdf_file_path):
         try:
