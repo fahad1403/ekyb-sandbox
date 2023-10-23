@@ -857,14 +857,15 @@ def business_gosi_page():
                     pdf_text = extract_text_from_pdf(pdf_file)
                     ocr_result = extract_consumer_gosi_data(pdf_text)
                     st.session_state['gsheet_data']['BUSINESS_GOSI_Data'] = json.dumps(ocr_result)
-                    st.session_state['gsheet_data']['BUSINESS_GOSI_PDF'] = pdf_file_url
-
-                    st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
+                    
 
                     uploaded_pdf_content = pdf_file.read()
                     file_name = pdf_file.name  # Get the file name
                     file_id = upload_to_drive(uploaded_pdf_content, file_name)
                     pdf_file_url = f"https://drive.google.com/uc?id={file_id}"
+                    st.session_state['gsheet_data']['BUSINESS_GOSI_PDF'] = pdf_file_url
+
+                    st.session_state['gsheet_data']['CUSTOMER_GOSI_Data'] = json.dumps(ocr_result)
                     st.session_state['gsheet_data']['CUSTOMER_GOSI_PDF'] = pdf_file_url
 
                     print(f"\n\n3rd: {st.session_state['gsheet_data']}")
