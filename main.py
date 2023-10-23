@@ -1037,10 +1037,11 @@ def simah_page():
             id_name = f"for {id_name.lower()}"
 
         with st.spinner(f"Getting Simah Report {id_name}..."):
-                time.sleep(2)
+                time.sleep(3)
         with st.spinner("Generating Results..."):
                 time.sleep(2)
         with st.expander("Simah Report", expanded=True):
+            st.info(f"Person Name: {id_name}\tId number: {id_number}")
             with st.container():
                     st.markdown("<h4 style='color: #3498db;'>Active Product Summary</h4>", unsafe_allow_html=True)
                     st.dataframe(active_product_summary_df)
@@ -1154,43 +1155,47 @@ def expense_benchmarking_page():
 
                         hover_template = '<b>%{y}</b><br>Negative: -%{customdata}' if data['Free Cash Flow'].min() < 0 else '<b>%{y}</b>'
 
-                        fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Free Cash Flow'],
-                            title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
-                            barmode='relative', color_discrete_map={'Free Cash Flow': 'rgba(220,0,0,0.5)',
-                                                                    'Expense': 'rgba(102,51,153,0.5)',
-                                                                    'Revenue': 'rgba(182, 208, 226,0.8)'})
+                        tab1, tab2 = st.tabs(["Expense/Revenue", "Categorization"])
 
-                        fig.update_layout(
-                            xaxis=dict(showgrid=False),
-                            yaxis=dict(showgrid=False),
-                            plot_bgcolor='white',
-                            # width=950,
-                            # height=700,
-                            # margin=dict(l=400),
-                        )
+                        with tab1:
+                            fig = px.bar(data, x='Month', y=['Revenue', 'Expense', 'Free Cash Flow'],
+                                title='Monthly Revenue, Expense, and Free Cash Flow Analysis',
+                                barmode='relative', color_discrete_map={'Free Cash Flow': 'rgba(220,0,0,0.5)',
+                                                                        'Expense': 'rgba(102,51,153,0.5)',
+                                                                        'Revenue': 'rgba(182, 208, 226,0.8)'})
 
-                        fig.update_traces(marker=dict(color=['rgba(0,215,0,0.65)' if val >= 0 else 'rgba(250,0,0,0.5)' for val in data['Free Cash Flow']]),
-                          selector=dict(name='Free Cash Flow'))
-                         # Define a minimum height for the chart (adjust this value as needed)
-                        min_chart_height = 800  # You can change this value
-                        # Use use_container_width=True for automatic width adjustment
-                        st.plotly_chart(fig, use_container_width=True, use_container_height=False, height=min_chart_height)
+                            fig.update_layout(
+                                xaxis=dict(showgrid=False),
+                                yaxis=dict(showgrid=False),
+                                plot_bgcolor='white',
+                                # width=950,
+                                # height=700,
+                                # margin=dict(l=400),
+                            )
 
-                        expense_category_data = json.loads(expense_category_data)
-                        categories = [item["category"] for item in expense_category_data["expenses"]]
-                        amounts = [item["amount"] for item in expense_category_data["expenses"]]
-                        percentages = [item["percentage"] for item in expense_category_data["expenses"]]
+                            fig.update_traces(marker=dict(color=['rgba(0,215,0,0.65)' if val >= 0 else 'rgba(250,0,0,0.5)' for val in data['Free Cash Flow']]),
+                            selector=dict(name='Free Cash Flow'))
+                            # Define a minimum height for the chart (adjust this value as needed)
+                            min_chart_height = 800  # You can change this value
+                            # Use use_container_width=True for automatic width adjustment
+                            st.plotly_chart(fig, use_container_width=True, use_container_height=False, height=min_chart_height)
 
-                        # Generating dynamic colors list with transparency
-                        colors = []
-                        for i in range(len(categories)):
-                            color = "rgba(" + str(random.randint(0, 255)) + "," + str(random.randint(0, 255)) + "," + str(random.randint(0, 255)) + ",0.4)"
-                            colors.append(color)
+                        with tab2:
+                            expense_category_data = json.loads(expense_category_data)
+                            categories = [item["category"] for item in expense_category_data["expenses"]]
+                            amounts = [item["amount"] for item in expense_category_data["expenses"]]
+                            percentages = [item["percentage"] for item in expense_category_data["expenses"]]
 
-                        # Creating a Plotly donut chart
-                        fig1 = go.Figure(data=[go.Pie(labels=categories, values=amounts, hole=0.5, marker=dict(colors=colors))])
-                        fig1.update_layout(title_text="Expense Categorization", margin=dict(l=50))
-                        st.plotly_chart(fig1, use_container_width=True, use_container_height=False, height=min_chart_height)
+                            # Generating dynamic colors list with transparency
+                            colors = []
+                            for i in range(len(categories)):
+                                color = "rgba(" + str(random.randint(0, 255)) + "," + str(random.randint(0, 255)) + "," + str(random.randint(0, 255)) + ",0.4)"
+                                colors.append(color)
+
+                            # Creating a Plotly donut chart
+                            fig1 = go.Figure(data=[go.Pie(labels=categories, values=amounts, hole=0.5, marker=dict(colors=colors))])
+                            fig1.update_layout(title_text="Expense Categorization", margin=dict(l=50))
+                            st.plotly_chart(fig1, use_container_width=True, use_container_height=False, height=min_chart_height)
 
                         st.session_state.next_button_enabled = True
                         st.session_state.step += 1
