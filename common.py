@@ -15,9 +15,6 @@ def set_custom_css():
   font-weight:bold;
   font-size:14px;
   }
-#   .st-emotion-cache-16idsys p:hover{
-#    color: #00FF00 !important;
-#   }
   .st-cp{
   color: #00FF00 !important;
   }
@@ -50,10 +47,12 @@ def set_custom_css():
     # height:90%;
     # }
     .st-emotion-cache-1gulkj5{
-    background:linear-gradient(to bottom, #009877  0%,#50ffff  100%);
+        background: linear-gradient(to bottom, #009877 0%,#008988 100%);
+
     }
     .st-emotion-cache-r421ms{
-    background:linear-gradient(to bottom, #009877  0%,#50ffff  100%);
+        background: linear-gradient(to bottom, #009877 0%,#008988 100%);
+
     }
     .div:first-child{
     overflow:auto;
@@ -81,7 +80,7 @@ def set_custom_css():
         margin: 0 auto;
         align-items: center;
         background-color: #009877;
-        border: 0;
+        border: 1px solid white;
         border-radius: 6px;
         box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
         box-sizing: border-box;
@@ -102,7 +101,7 @@ def set_custom_css():
         cursor: pointer;
     }
     .stButton>button:hover {
-        color: #00FF00 !important;
+        border: 2px solid white;
     }
     .st-cf {
     color: #789877
@@ -156,7 +155,7 @@ def set_custom_css():
     # align:right;
     }
     .st-emotion-cache-1y04v0k{
-     background: linear-gradient(to right, #ff00cc, #3333ff); /* Replace these colors with your desired gradient colors */
+        background: linear-gradient(to bottom, #009877 0%, #008988 100%);
      
     color: white; /* Set the text color to white or any color that contrasts well with the gradient */
     align:center;
