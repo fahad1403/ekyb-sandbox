@@ -28,6 +28,10 @@ def set_custom_css():
   align:center;
   text-align:center;
   }
+  .st-emotion-cache-7ym5gk:hover{
+  color: white !important;
+  background-color: #009877;
+  }
    .creds{
    color:white;
     font-weight:bold;
