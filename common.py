@@ -4,7 +4,7 @@ def set_custom_css():
     custom_css = """
     <style>
      .title {
-    color: #3498db; /* Title color */
+    color: #459877; /* Title color */
     font-size: 36px; /* Title font size */
     font-weight: bold; /* Bold font weight */
     text-align: center; /* Text alignment */
@@ -50,10 +50,10 @@ def set_custom_css():
     # height:90%;
     # }
     .st-emotion-cache-1gulkj5{
-    background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
+    background:linear-gradient(to bottom, #009877  0%,#50ffff  100%);
     }
     .st-emotion-cache-r421ms{
-    background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
+    background:linear-gradient(to bottom, #009877  0%,#50ffff  100%);
     }
     .div:first-child{
     overflow:auto;
@@ -80,7 +80,7 @@ def set_custom_css():
         display: block;
         margin: 0 auto;
         align-items: center;
-        background-image: linear-gradient(144deg, #AF40FF, #5B42F3 50%, #00DDEB);
+        background-color: #009877;
         border: 0;
         border-radius: 6px;
         box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
@@ -104,8 +104,17 @@ def set_custom_css():
     .stButton>button:hover {
         color: #00FF00 !important;
     }
+    .st-cf {
+    color: #789877
+    }
+    .st-cf:hover {
+    color: #009877
+    }
+    .st-cp {
+        background-color: #009877;
+    }
 #     .st-emotion-cache-10oheav{
-#      background:linear-gradient(to bottom, #3399ff  0%,#00ffff  100%);
+#      background:linear-gradient(to bottom, #009877  0%,#00ffff  100%);
 #      height:100%;
 #      width:100%
 #    }
@@ -148,6 +157,7 @@ def set_custom_css():
     }
     .st-emotion-cache-1y04v0k{
      background: linear-gradient(to right, #ff00cc, #3333ff); /* Replace these colors with your desired gradient colors */
+     
     color: white; /* Set the text color to white or any color that contrasts well with the gradient */
     align:center;
     /* Add other styling as needed */

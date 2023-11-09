@@ -41,7 +41,7 @@ from common import set_custom_css
 # import numpy as np
 
 # Define fixed credentials
-USERNAME = "alraedah"
+USERNAME = "hala"
 PASSWORD = "ekyb-sandbox"
 
 st.set_page_config(layout="wide")
@@ -319,7 +319,7 @@ def login_page():
 # </style>
 # """
     # logo_url='https://objectstorage.me-jeddah-1.oraclecloud.com/n/idcsprod/b/me-jeddah-idcs-1-9E6C09D36371AB1B7C12FA52FA120B95980D070A43765EF7F2A2F0B0F82948E6/o/images/202109131530/1631547034999/Alraedah-Logo-Landscape-2.jpg'
-    logo_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFO9nBqjHtATsOxPAjsRLo0VP1QJR5wsH2Pw&usqp=CAU"
+    logo_url = "https://hala.com/assets/images/logos/logo.svg"
     # st.markdown(custom_css, unsafe_allow_html=True)
   # Center the image dynamically based on screen width
     st.markdown(
@@ -337,7 +337,7 @@ def login_page():
     unsafe_allow_html=True
 )
 # Create the styled title
-    st.markdown('<h1 class="title">Login Page</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="title">Login</h1>', unsafe_allow_html=True)
     # Use st.empty() to create placeholders for input fields and messages
     placeholder = st.empty()
    # Create a custom container for the login form with a background image
