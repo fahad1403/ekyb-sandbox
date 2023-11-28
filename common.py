@@ -112,7 +112,7 @@ def set_custom_css():
         border: 2px solid white;
     }
     .st-cf {
-    color: #9FA1A4
+    color: black;
     }
     .st-cf:hover {
     color: #EF5524
