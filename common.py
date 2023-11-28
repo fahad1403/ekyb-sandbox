@@ -62,7 +62,7 @@ def set_custom_css():
     overflow:auto;
     }
     .st-emotion-cache-10trblm{
-     color: #231F20;
+     color: #FF695E;
     # font-weight:bold;
     # align:center
     # text-align:center;
@@ -151,13 +151,13 @@ def set_custom_css():
         }
     }
     .st-emotion-cache-9ycgxx{
-    color:white;
+    color: black;
     font-weight:bold;
     # text-align:right;
     # align:right;
     }
     .st-emotion-cache-1aehpvj{
-     color:white;
+     color: black;
     font-weight:bold;
     #  text-align:right;
     # align:right;
