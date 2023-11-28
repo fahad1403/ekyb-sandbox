@@ -84,7 +84,7 @@ def set_custom_css():
         margin: 0 auto;
         align-items: center;
         background-color: white;
-        border: 1px solid white;
+        border: 1px solid light-gray;
         border-radius: 6px;
         box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
         box-sizing: border-box;
