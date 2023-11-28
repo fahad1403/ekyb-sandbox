@@ -4,7 +4,7 @@ def set_custom_css():
     custom_css = """
     <style>
      .title {
-    color: #231F20; /* Title color */
+    color: #FF695E; /* Title color */
     font-size: 36px; /* Title font size */
     font-weight: bold; /* Bold font weight */
     text-align: center; /* Text alignment */
@@ -50,19 +50,19 @@ def set_custom_css():
     # width:90%;
     # height:90%;
     # }
-    # .st-emotion-cache-1gulkj5{
-    #     background: linear-gradient(to bottom, #EF5524 0%,#EE3524 100%);
+    .st-emotion-cache-1gulkj5{
+        background: linear-gradient(to bottom, #EF5524 0%,#FF695E 100%);
 
-    # }
-    # .st-emotion-cache-r421ms{
-    #     background: linear-gradient(to bottom, #EF5524 0%,#EE3524 100%);
+    }
+    .st-emotion-cache-r421ms{
+        background: linear-gradient(to bottom, #EF5524 0%,#FF695E 100%);
 
-    # }
+    }
     .div:first-child{
     overflow:auto;
     }
-    .st-emotion-cache-10trblm{
-     color: #FF695E;
+    # .st-emotion-cache-10trblm{
+    #  color:white;
     # font-weight:bold;
     # align:center
     # text-align:center;
@@ -78,21 +78,17 @@ def set_custom_css():
     # font-weight:bold;
     # align:center
     # text-align:center;
-    }
-    .stTextInput > label
-    {
-    color: #9FA1A4;
-    }
+    # }
     .stButton>button {
         display: block;
         margin: 0 auto;
         align-items: center;
-        background-color: #EE3524;
+        background-color: white;
         border: 1px solid white;
         border-radius: 6px;
         box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
         box-sizing: border-box;
-        color: #FFFFFF;
+        color: #EE3524;
         display: flex;
         font-family: Phantomsans, sans-serif;
         font-size: 20px;
@@ -112,7 +108,7 @@ def set_custom_css():
         border: 2px solid white;
     }
     .st-cf {
-    color: black;
+    color: #9FA1A4
     }
     .st-cf:hover {
     color: #EF5524
@@ -151,13 +147,13 @@ def set_custom_css():
         }
     }
     .st-emotion-cache-9ycgxx{
-    color: black;
+    color:white;
     font-weight:bold;
     # text-align:right;
     # align:right;
     }
     .st-emotion-cache-1aehpvj{
-     color: black;
+     color:white;
     font-weight:bold;
     #  text-align:right;
     # align:right;
