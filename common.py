@@ -4,7 +4,7 @@ def set_custom_css():
     custom_css = """
     <style>
      .title {
-    color: #459877; /* Title color */
+    color: #231F20; /* Title color */
     font-size: 36px; /* Title font size */
     font-weight: bold; /* Bold font weight */
     text-align: center; /* Text alignment */
@@ -30,7 +30,7 @@ def set_custom_css():
   }
   .st-emotion-cache-7ym5gk:hover{
   color: white !important;
-  background-color: #009877;
+  background-color: #EF5524;
   }
    .creds{
    color:white;
@@ -50,19 +50,19 @@ def set_custom_css():
     # width:90%;
     # height:90%;
     # }
-    .st-emotion-cache-1gulkj5{
-        background: linear-gradient(to bottom, #009877 0%,#008988 100%);
+    # .st-emotion-cache-1gulkj5{
+    #     background: linear-gradient(to bottom, #EF5524 0%,#EE3524 100%);
 
-    }
-    .st-emotion-cache-r421ms{
-        background: linear-gradient(to bottom, #009877 0%,#008988 100%);
+    # }
+    # .st-emotion-cache-r421ms{
+    #     background: linear-gradient(to bottom, #EF5524 0%,#EE3524 100%);
 
-    }
+    # }
     .div:first-child{
     overflow:auto;
     }
-    # .st-emotion-cache-10trblm{
-    #  color:white;
+    .st-emotion-cache-10trblm{
+     color: #231F20;
     # font-weight:bold;
     # align:center
     # text-align:center;
@@ -78,12 +78,16 @@ def set_custom_css():
     # font-weight:bold;
     # align:center
     # text-align:center;
-    # }
+    }
+    .stTextInput > label
+    {
+    color: #9FA1A4;
+    }
     .stButton>button {
         display: block;
         margin: 0 auto;
         align-items: center;
-        background-color: #009877;
+        background-color: #EE3524;
         border: 1px solid white;
         border-radius: 6px;
         box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
@@ -108,16 +112,16 @@ def set_custom_css():
         border: 2px solid white;
     }
     .st-cf {
-    color: #789877
+    color: #9FA1A4
     }
     .st-cf:hover {
-    color: #009877
+    color: #EF5524
     }
     .st-cp {
-        background-color: #009877;
+        background-color: #EF5524;
     }
 #     .st-emotion-cache-10oheav{
-#      background:linear-gradient(to bottom, #009877  0%,#00ffff  100%);
+#      background:linear-gradient(to bottom, #EF5524  0%,#00ffff  100%);
 #      height:100%;
 #      width:100%
 #    }
@@ -159,7 +163,7 @@ def set_custom_css():
     # align:right;
     }
     .st-emotion-cache-1y04v0k{
-        background: linear-gradient(to bottom, #009877 0%, #008988 100%);
+        background: linear-gradient(to bottom, #EF5524 0%, #EE3524 100%);
      
     color: white; /* Set the text color to white or any color that contrasts well with the gradient */
     align:center;
